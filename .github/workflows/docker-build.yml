@@ -48,10 +48,10 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository }}/playlist-manager:${{ env.new_tag }} .
-        docker tag ghcr.io/${{ github.repository }}/playlist-manager:${{ env.new_tag }} ghcr.io/${{ github.repository }}/playlist-manager:latest
+        docker build -t ghcr.io/${{ github.repository }}:${{ env.new_tag }} .
+        docker tag ghcr.io/${{ github.repository }}:${{ env.new_tag }} ghcr.io/${{ github.repository }}:latest
 
     - name: Push Docker image
       run: |
-        docker push ghcr.io/${{ github.repository }}/playlist-manager:${{ env.new_tag }}
-        docker push ghcr.io/${{ github.repository }}/playlist-manager:latest
+        docker push ghcr.io/${{ github.repository }}:${{ env.new_tag }}
+        docker push ghcr.io/${{ github.repository }}:latest

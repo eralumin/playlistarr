@@ -9,7 +9,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the source code to the container
-COPY ./src /app/src
+COPY ./src /app
 
 # Set the default command to run your script (adjust if necessary)
-CMD ["python", "/app/src/your_scripts.py"]
+CMD ["python", "/app/main.py"]

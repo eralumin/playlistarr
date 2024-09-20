@@ -46,6 +46,14 @@ NAVIDROME_PASSWORD=your-encoded-password
 # Profiles for Lidarr
 QUALITY_PROFILE_NAME=HQ
 METADATA_PROFILE_NAME=Standard
+
+# Playlists Categories to include or exclude
+INCLUDED_CATEGORIES=foo,bar
+EXCLUDED_CATEGORIES=spam,eggs
+
+# Playlists limits
+SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST=4    # Default to 3
+SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY=32 # Default to 50
 ```
 
 ### 3. Running the Application
@@ -78,6 +86,8 @@ services:
       - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
       - QUALITY_PROFILE_NAME=${QUALITY_PROFILE_NAME}
       - METADATA_PROFILE_NAME=${METADATA_PROFILE_NAME}
+      - SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST=${SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST}
+      - SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY=${SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY}
     volumes:
       - ./src:/app/src
     command: ["python", "/app/src/your_scripts.py"]

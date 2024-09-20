@@ -1,5 +1,5 @@
 class PlaylistManager:
-    def __init__(self, spotify_service, lidarr_service, navidrome_service, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories, random_category_limit):
+    def __init__(self, spotify_service, lidarr_service, navidrome_service, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories):
         self.spotify_service = spotify_service
         self.lidarr_service = lidarr_service
         self.navidrome_service = navidrome_service
@@ -7,7 +7,6 @@ class PlaylistManager:
         self.category_playlist_limit = category_playlist_limit
         self.included_categories = [cat.lower() for cat in included_categories if cat]
         self.excluded_categories = [cat.lower() for cat in excluded_categories if cat]
-        self.random_category_limit = random_category_limit
 
     def process_playlists(self, quality_profile_name, metadata_profile_name):
         """Process both artist and category playlists."""
@@ -35,7 +34,7 @@ class PlaylistManager:
 
     def process_playlists_by_random_categories(self, quality_profile_name, metadata_profile_name):
         """Fetch and process random categories."""
-        categories = self.spotify_service.get_categories(limit=self.random_category_limit, excluded_categories=self.excluded_categories)
+        categories = self.spotify_service.get_categories(limit=self.category_playlist_limit, excluded_categories=self.excluded_categories)
         for category in categories:
             print(f'Fetching playlists for random category: {category["name"]}')
             playlists = self.spotify_service.get_playlists_for_category(category['id'], self.category_playlist_limit)

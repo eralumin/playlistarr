@@ -13,8 +13,8 @@ NAVIDROME_USERNAME = os.getenv('NAVIDROME_USERNAME', 'default-username')
 NAVIDROME_PASSWORD = os.getenv('NAVIDROME_PASSWORD', 'default-password')
 
 # Playlist limits
-SPOTIFY_PLAYLIST_LIMIT_ARTIST = int(os.getenv('SPOTIFY_PLAYLIST_LIMIT_ARTIST', 3))  # Number of playlists per artist
-SPOTIFY_PLAYLIST_LIMIT_CATEGORY = int(os.getenv('SPOTIFY_PLAYLIST_LIMIT_CATEGORY', 3))  # Number of playlists per category
+SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST = int(os.getenv('SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST', 3))  # Number of playlists per artist
+SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY = int(os.getenv('SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY', 3))  # Number of playlists per category
 SPOTIFY_RANDOM_CATEGORY_LIMIT = int(os.getenv('SPOTIFY_RANDOM_CATEGORY_LIMIT', 50))  # Number of random categories to process
 
 # Included and excluded categories
@@ -34,14 +34,14 @@ def run_playlist_manager():
     
     # Initialize playlist manager
     manager = PlaylistManager(
-        spotify, 
-        lidarr, 
-        navidrome, 
-        SPOTIFY_PLAYLIST_LIMIT_ARTIST, 
-        SPOTIFY_PLAYLIST_LIMIT_CATEGORY, 
-        INCLUDED_CATEGORIES, 
-        EXCLUDED_CATEGORIES,
-        SPOTIFY_RANDOM_CATEGORY_LIMIT
+        spotify=spotify,
+        lidarr=lidarr,
+        navidrome=navidrome,
+        artist_playlist_limit=SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST,
+        category_playlist_limit=SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY,
+        included_categories=INCLUDED_CATEGORIES,
+        excluded_categories=EXCLUDED_CATEGORIES,
+        random_category_limit=SPOTIFY_RANDOM_CATEGORY_LIMIT
     )
 
     # Process playlists

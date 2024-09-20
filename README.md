@@ -54,6 +54,9 @@ EXCLUDED_CATEGORIES=spam,eggs
 # Playlists limits
 SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST=4    # Default to 3
 SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY=32 # Default to 50
+
+# Cron-like schedule for running the task
+CRON_SCHEDULE='* 0 * * *' # Default to '0 0 * * *'
 ```
 
 ### 3. Running the Application
@@ -88,6 +91,7 @@ services:
       - METADATA_PROFILE_NAME=${METADATA_PROFILE_NAME}
       - SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST=${SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST}
       - SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY=${SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY}
+      - CRON_SCHEDULE=${CRON_SCHEDULE}
     volumes:
       - ./src:/app/src
     command: ["python", "/app/src/your_scripts.py"]

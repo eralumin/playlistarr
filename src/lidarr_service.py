@@ -27,6 +27,21 @@ class LidarrService:
         response = requests.get(url, headers=self.headers)
         return response.json()
 
+    def get_artist(self, artist_name):
+        url = f'{self.lidarr_url}/api/v1/artist/lookup?term={artist_name}'
+        headers = {'X-Api-Key': self.api_key}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            artist_data = response.json()
+            if artist_data:
+                return artist_data[0]
+        return None
+
+    def is_artist_monitored(self, artist_name):
+        artist_data = self.search_artist_in_lidarr(artist_name)
+
+        return artist_data and artist_data['monitored']
+
     def get_album(self, album_title, artist_name):
         """Fetch the album details from Lidarr."""
         url = f'{self.lidarr_url}/api/v1/album/lookup?term={album_title} {artist_name}'

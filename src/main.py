@@ -28,15 +28,15 @@ def run_playlist_manager():
     """Run the main playlist processing logic."""
     print(f"Running task at {datetime.now()}")
     # Initialize services
-    spotify_service = SpotifyService(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
-    lidarr_service = LidarrService(lidarr_url=LIDARR_URL, api_key=LIDARR_API_KEY)
-    navidrome_service = NavidromeService(navidrome_url=NAVIDROME_URL, username=NAVIDROME_USERNAME, password=NAVIDROME_PASSWORD)
+    spotify = SpotifyService(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
+    lidarr = LidarrService(lidarr_url=LIDARR_URL, api_key=LIDARR_API_KEY)
+    navidrome = NavidromeService(navidrome_url=NAVIDROME_URL, username=NAVIDROME_USERNAME, password=NAVIDROME_PASSWORD)
     
     # Initialize playlist manager
     manager = PlaylistManager(
-        spotify_service, 
-        lidarr_service, 
-        navidrome_service, 
+        spotify, 
+        lidarr, 
+        navidrome, 
         SPOTIFY_PLAYLIST_LIMIT_ARTIST, 
         SPOTIFY_PLAYLIST_LIMIT_CATEGORY, 
         INCLUDED_CATEGORIES, 

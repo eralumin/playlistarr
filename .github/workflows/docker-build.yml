@@ -27,34 +27,19 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract and increment version
-      id: vars
-      run: |
-        # Fetch all tags
-        git fetch --tags
-
-        # Get the latest tag, default to v0.0.0 if none exists
-        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1` || echo "v0.0.0")
-        echo "Latest tag: $latest_tag"
-
-        # Increment the version number (using semver)
-        IFS='.' read -ra PARTS <<< "${latest_tag#v}"
-        major=${PARTS[0]}
-        minor=${PARTS[1]}
-        patch=${PARTS[2]}
-        new_tag="v$major.$minor.$((patch + 1))"
-        echo "New tag: $new_tag"
-
-        # Set outputs for the new tag and latest tag
-        echo "new_tag=$new_tag" >> $GITHUB_ENV
-        echo "latest_tag=latest" >> $GITHUB_ENV
+    - name: Get next version
+      uses: reecetech/version-increment@2024.4.3
+      id: version
+      with:
+        scheme: conventional_commits
+        increment: patch
 
     - name: Build Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository }}:${{ env.new_tag }} .
-        docker tag ghcr.io/${{ github.repository }}:${{ env.new_tag }} ghcr.io/${{ github.repository }}:latest
+        docker build -t ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }} .
+        docker tag ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }} ghcr.io/${{ github.repository }}:latest
 
     - name: Push Docker image
       run: |
-        docker push ghcr.io/${{ github.repository }}:${{ env.new_tag }}
+        docker push ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
         docker push ghcr.io/${{ github.repository }}:latest

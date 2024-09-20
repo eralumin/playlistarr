@@ -17,9 +17,7 @@ class PlaylistManager:
 
     def process_playlists_by_artists(self, quality_profile_name, metadata_profile_name):
         """Fetch and process playlists for fully monitored artists."""
-        artists = self.navidrome.fetch_artists()
-
-        for artist in artists:
+        for artist in self.navidrome.artists:
             artist_name = artist['name']
 
             if self.lidarr.is_artist_monitored(artist_name):
@@ -48,10 +46,10 @@ class PlaylistManager:
                 self.process_single_playlist(playlist, quality_profile_name, metadata_profile_name)
 
     def process_single_playlist(self, playlist, quality_profile_name, metadata_profile_name):
-        """Process a single playlist."""
+        """Process a single playlist, create or update in Navidrome."""
         print(f'Processing playlist: {playlist["name"]}')
         playlist_tracks = []
-        playlist_id = self.navidrome.create_playlist(playlist["name"])
+        playlist_id = self.navidrome.create_or_update_playlist(playlist["name"])
 
         if playlist_id:
             playlist_tracks = self.process_tracks_in_playlist(playlist, quality_profile_name, metadata_profile_name)
@@ -70,26 +68,10 @@ class PlaylistManager:
             artist_name = track['track']['artists'][0]['name']
             album_title = track['track']['album']['name']
 
-            # Handle album in Lidarr
-            self.handle_lidarr_album(album_title, artist_name, quality_profile_name, metadata_profile_name)
+            self.lidarr.add_or_monitor_album(album_title, artist_name, quality_profile_name, metadata_profile_name)
 
-            # Handle track in Navidrome
-            track_id = self.handle_navidrome_track(artist_name, track_name)
+            track_id = self.navidrome.search_track_in_navidrome(artist_name, track_name)
             if track_id:
                 playlist_tracks.append(track_id)
 
         return playlist_tracks
-
-    def handle_lidarr_album(self, album_title, artist_name, quality_profile_name, metadata_profile_name):
-        """Add or monitor an album in Lidarr."""
-        print(f'Checking album: {album_title} by {artist_name}')
-        self.lidarr.add_or_monitor_album(album_title, artist_name, quality_profile_name, metadata_profile_name)
-
-    def handle_navidrome_track(self, artist_name, track_name):
-        """Search for a track in Navidrome."""
-        track_id = self.navidrome.search_track_in_navidrome(artist_name, track_name)
-        if track_id:
-            print(f'Found track {track_name} by {artist_name} in Navidrome with ID {track_id}')
-        else:
-            print(f'Could not find track {track_name} by {artist_name} in Navidrome.')
-        return track_id

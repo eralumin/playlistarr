@@ -1,13 +1,27 @@
-import requests
-
 class NavidromeService:
     def __init__(self, navidrome_url, username, password):
         self.navidrome_url = navidrome_url
         self.username = username
         self.password = password  # Base64 encoded password for Subsonic API
 
+    @property
+    def artists(self):
+        url = f"{self.navidrome_url}/rest/getArtists"
+        params = {
+            'v': '1.16.1',
+            'c': 'myapp',
+            'f': 'json',
+            'u': self.username,
+            'p': f'enc:{self.password}'
+        }
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            return response.json().get('subsonic-response', {}).get('artists', {}).get('index', [])
+        else:
+            print(f'Failed to fetch artists from Navidrome: {response.content}')
+            return []
+
     def create_playlist(self, playlist_name):
-        """Create a playlist in Navidrome."""
         url = f"{self.navidrome_url}/rest/createPlaylist"
         params = {
             'v': '1.16.1',
@@ -43,21 +57,3 @@ class NavidromeService:
             if search_result:
                 return search_result[0]['id']
         return None
-
-    def add_tracks_to_playlist(self, playlist_id, track_ids):
-        """Add tracks to a playlist in Navidrome."""
-        url = f"{self.navidrome_url}/rest/updatePlaylist"
-        params = {
-            'v': '1.16.1',
-            'c': 'myapp',
-            'f': 'json',
-            'playlistId': playlist_id,
-            'songId': track_ids,
-            'u': self.username,
-            'p': f'enc:{self.password}',
-        }
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            print(f'Added {len(track_ids)} tracks to playlist {playlist_id}')
-        else:
-            print(f'Failed to add tracks to playlist {playlist_id}')

@@ -40,3 +40,18 @@ jobs:
         minor=${PARTS[1]}
         patch=${PARTS[2]}
         new_tag="v$major.$minor.$((patch + 1))"
+        echo "New tag: $new_tag"
+
+        # Set outputs for the new tag and latest tag
+        echo "new_tag=$new_tag" >> $GITHUB_ENV
+        echo "latest_tag=latest" >> $GITHUB_ENV
+
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository }}/playlist-manager:${{ env.new_tag }} .
+        docker tag ghcr.io/${{ github.repository }}/playlist-manager:${{ env.new_tag }} ghcr.io/${{ github.repository }}/playlist-manager:latest
+
+    - name: Push Docker image
+      run: |
+        docker push ghcr.io/${{ github.repository }}/playlist-manager:${{ env.new_tag }}
+        docker push ghcr.io/${{ github.repository }}/playlist-manager:latest

@@ -5,20 +5,6 @@ class LidarrService:
         self.lidarr_url = lidarr_url
         self.api_key = api_key
         self.headers = {'X-Api-Key': self.api_key}
-        self.quality_profiles = self.get_quality_profiles()
-        self.metadata_profiles = self.get_metadata_profiles()
-
-    def get_quality_profiles(self):
-        """Fetch available quality profiles from Lidarr."""
-        url = f'{self.lidarr_url}/api/v1/qualityprofile'
-        response = requests.get(url, headers=self.headers)
-        return response.json()
-
-    def get_metadata_profiles(self):
-        """Fetch available metadata profiles from Lidarr."""
-        url = f'{self.lidarr_url}/api/v1/metadataprofile'
-        response = requests.get(url, headers=self.headers)
-        return response.json()
 
     def get_profile_id_by_name(self, profiles, name):
         """Helper function to match a profile by name and return its ID."""
@@ -27,7 +13,21 @@ class LidarrService:
                 return profile['id']
         return None
 
-    def fetch_album(self, album_title, artist_name):
+    @property
+    def quality_profiles(self):
+        """Fetch available quality profiles from Lidarr."""
+        url = f'{self.lidarr_url}/api/v1/qualityprofile'
+        response = requests.get(url, headers=self.headers)
+        return response.json()
+
+    @property
+    def metadata_profiles(self):
+        """Fetch available metadata profiles from Lidarr."""
+        url = f'{self.lidarr_url}/api/v1/metadataprofile'
+        response = requests.get(url, headers=self.headers)
+        return response.json()
+
+    def get_album(self, album_title, artist_name):
         """Fetch the album details from Lidarr."""
         url = f'{self.lidarr_url}/api/v1/album/lookup?term={album_title} {artist_name}'
         response = requests.get(url, headers=self.headers)
@@ -35,7 +35,7 @@ class LidarrService:
             return response.json()
         return None
 
-    def add_album_to_lidarr(self, album_data, quality_profile_id, metadata_profile_id):
+    def add_album(self, album_data, quality_profile_id, metadata_profile_id):
         """Add a new album to Lidarr."""
         album_id = album_data[0]['foreignAlbumId']
         add_url = f'{self.lidarr_url}/api/v1/album'
@@ -52,7 +52,7 @@ class LidarrService:
         else:
             print(f'Failed to add album: {response.content}')
 
-    def monitor_existing_album(self, album_data):
+    def monitor_album(self, album_data):
         """Monitor an existing album in Lidarr."""
         print(f'Album {album_data[0]["title"]} by {album_data[0]["artist"]["artistName"]} exists but is not monitored. Monitoring it now...')
         url = f'{self.lidarr_url}/api/v1/album'
@@ -64,7 +64,6 @@ class LidarrService:
             print(f'Failed to update monitoring: {response.content}')
 
     def add_or_monitor_album(self, album_title, artist_name, quality_profile_name, metadata_profile_name):
-        """Add a new album to Lidarr or monitor an existing one."""
         quality_profile_id = self.get_profile_id_by_name(self.quality_profiles, quality_profile_name)
         metadata_profile_id = self.get_profile_id_by_name(self.metadata_profiles, metadata_profile_name)
 
@@ -75,10 +74,10 @@ class LidarrService:
             print(f'Metadata profile "{metadata_profile_name}" not found!')
             return
 
-        album_data = self.fetch_album(album_title, artist_name)
+        album_data = self.get_album(album_title, artist_name)
         if album_data and len(album_data) > 0:
             if not album_data[0]['monitored']:
-                self.monitor_existing_album(album_data)
+                self.monitor_album(album_data)
         else:
             print(f'Adding album {album_title} by {artist_name} to Lidarr.')
-            self.add_album_to_lidarr(album_data, quality_profile_id, metadata_profile_id)
+            self.add_album(album_data, quality_profile_id, metadata_profile_id)

@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  # Playlistarr service
+  playlistarr:
+    image: ghcr.io/<your-github-username>/playlistarr:latest
+    container_name: playlistarr
+    restart: always
+    environment:
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - LIDARR_URL=http://lidarr:8686
+      - LIDARR_API_KEY=${LIDARR_API_KEY}
+      - NAVIDROME_URL=http://navidrome:4533
+      - NAVIDROME_USERNAME=${NAVIDROME_USERNAME}
+      - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
+      - SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST=3
+      - SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY=5
+      - SPOTIFY_RANDOM_CATEGORY_LIMIT=10
+      - INCLUDED_CATEGORIES=rock,pop,jazz
+      - EXCLUDED_CATEGORIES=hip-hop,electronic
+      - CRON_SCHEDULE=0 0 * * * # Example cron schedule (every midnight)
+    depends_on:
+      - lidarr
+      - navidrome
+
+  # Lidarr service
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - UMASK_SET=022
+    volumes:
+      - /path/to/lidarr/config:/config
+      - /path/to/music:/music # Update this path to point to your music directory
+    ports:
+      - 8686:8686 # Exposing Lidarr's web UI
+    networks:
+      - media-network
+
+  # Navidrome service
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    restart: always
+    environment:
+      - ND_SCANINTERVAL=1h
+      - ND_LOGLEVEL=info
+      - ND_USERNAME=${NAVIDROME_USERNAME}
+      - ND_PASSWORD=${NAVIDROME_PASSWORD}
+    volumes:
+      - /path/to/navidrome/config:/data
+      - /path/to/music:/music # Same music path shared with Lidarr
+    ports:
+      - 4533:4533 # Exposing Navidrome's web UI
+    networks:
+      - media-network
+
+networks:
+  media-network:
+    driver: bridge

@@ -8,21 +8,22 @@ class NavidromeService:
         self.navidrome_url = navidrome_url
         self.username = username
         self.password = password
-        self.salt = self.generate_salt()
 
-    def generate_salt(self, length=6):
+    def generate_salt(self, length=48):
         return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-    def generate_token(self):
-        token_string = self.password + self.salt
+    def generate_token(self, salt):
+        token_string = self.password + salt
         return hashlib.md5(token_string.encode('utf-8')).hexdigest()
 
     @property
     def params(self):
+        salt = self.generate_salt()
+
         return {
             'u': self.username,
-            't': self.generate_token(),
-            's': self.salt,
+            't': self.generate_token(salt),
+            's': salt,
             'v': '1.16.1',
             'c': 'playlistarr',
             'f': 'json'

@@ -85,7 +85,7 @@ class PlaylistManager:
                 )
                 lidarr_album = LidarrAlbum(
                     artist=lidarr_artist,
-                    foreign_id=spotify_track.album_id,
+                    foreign_id=spotify_track.album._id,
                     title=spotify_track.album.title,
                     is_monitored=True,
                     root_folder=self.lidarr.get_root_folder_or_none(),

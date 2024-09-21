@@ -4,7 +4,7 @@ from datetime import datetime
 from croniter import croniter
 
 from lidarr import LidarrService
-from musicbrainz import MusicbrainzService
+from musicbrainz import MusicBrainzService
 from navidrome import NavidromeService
 from spotify import SpotifyService
 from playlist import PlaylistManager

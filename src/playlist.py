@@ -19,8 +19,25 @@ class PlaylistManager:
         self.excluded_categories = [cat.lower() for cat in excluded_categories if cat]
         self.random_category_limit = random_category_limit
 
-        self.quality_profile_id = self.lidarr.get_profile_id_by_name(self.lidarr.quality_profiles, quality_profile_name)
-        self.metadata_profile_id = self.lidarr.get_profile_id_by_name(self.lidarr.metadata_profiles, metadata_profile_name)
+        # Fetch quality profile
+        logging.info(f"Looking for quality profile: '{quality_profile_name}'")
+        self.quality_profile = self.lidarr.get_quality_profile_or_none(quality_profile_name)
+        
+        if not self.quality_profile:
+            logging.error(f"Quality profile '{quality_profile_name}' not found. Exiting.")
+            sys.exit(1)
+        
+        logging.info(f"Quality profile '{quality_profile_name}' found with ID: {self.quality_profile._id}")
+
+        # Fetch metadata profile
+        logging.info(f"Looking for metadata profile: '{metadata_profile_name}'")
+        self.metadata_profile = self.lidarr.get_metadata_profile_or_none(metadata_profile_name)
+        
+        if not self.metadata_profile:
+            logging.error(f"Metadata profile '{metadata_profile_name}' not found. Exiting.")
+            sys.exit(1)
+
+        logging.info(f"Metadata profile '{metadata_profile_name}' found with ID: {self.metadata_profile._id}")
 
     def process(self):
         self.process_playlists_by_artists()
@@ -92,7 +109,7 @@ class PlaylistManager:
                     root_folder=self.lidarr.get_root_folder_or_none(),
                 )
 
-            self.lidarr.add_album(lidarr_album, self.quality_profile_id, self.metadata_profile_id)
+            self.lidarr.add_album(lidarr_album, self.quality_profile, self.metadata_profile)
 
             navidrome_track = self.navidrome.get_track_or_none(spotify_track.album.artist.name, spotify_track.title)
             if navidrome_track:

@@ -26,29 +26,89 @@ class LidarrAlbum:
         if self.root_folder:
             return f'{self.root_folder}/{self.artist.name}'
 
+@dataclass
+class LidarrQualityProfile:
+    _id: int
+    name: str
+
+@dataclass
+class LidarrMetadataProfile:
+    _id: int
+    name: str
+
 class LidarrService:
     def __init__(self, lidarr_url, api_key):
         self.lidarr_url = lidarr_url
         self.api_key = api_key
         self.headers = {'X-Api-Key': self.api_key}
 
-    def get_profile_id_by_name(self, profiles, name):
-        for profile in profiles:
-            if profile['name'].lower() == name.lower():
-                return profile['id']
-        return None
-
     @property
     def quality_profiles(self):
         url = f'{self.lidarr_url}/api/v1/qualityprofile'
-        response = requests.get(url, headers=self.headers)
-        return response.json()
+        try:
+            logging.info("Fetching quality profiles from Lidarr...")
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()  # Raises an error if the request failed
+            raw_quality_profiles = response.json()
+
+            quality_profiles = []
+            for raw_quality_profile in raw_quality_profiles:
+                quality_profiles.append(
+                    LidarrQualityProfile(
+                        _id=raw_quality_profile['id'],
+                        name=raw_quality_profile['name'],
+                    )
+                )
+            logging.info(f"Fetched {len(quality_profiles)} quality profiles.")
+            return quality_profiles
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching quality profiles: {e}")
+            return []
 
     @property
     def metadata_profiles(self):
         url = f'{self.lidarr_url}/api/v1/metadataprofile'
-        response = requests.get(url, headers=self.headers)
-        return response.json()
+        try:
+            logging.info("Fetching metadata profiles from Lidarr...")
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()  # Raises an error if the request failed
+            raw_metadata_profiles = response.json()
+
+            metadata_profiles = []
+            for raw_metadata_profile in raw_metadata_profiles:
+                metadata_profiles.append(
+                    LidarrMetadataProfile(
+                        _id=raw_metadata_profile['id'],
+                        name=raw_metadata_profile['name'],
+                    )
+                )
+            logging.info(f"Fetched {len(metadata_profiles)} metadata profiles.")
+            return metadata_profiles
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching metadata profiles: {e}")
+            return []
+
+    def get_quality_profile_or_none(self, name):
+        logging.info(f"Searching for quality profile: {name}")
+        quality_profile = next((profile for profile in self.quality_profiles if profile.name == name), None)
+
+        if quality_profile:
+            logging.info(f"Found quality profile '{name}' with ID: {quality_profile._id}")
+        else:
+            logging.warning(f"Quality profile '{name}' not found.")
+
+        return quality_profile
+
+    def get_metadata_profile_or_none(self, name):
+        logging.info(f"Searching for metadata profile: {name}")
+        metadata_profile = next((profile for profile in self.metadata_profiles if profile.name == name), None)
+
+        if metadata_profile:
+            logging.info(f"Found metadata profile '{name}' with ID: {metadata_profile._id}")
+        else:
+            logging.warning(f"Metadata profile '{name}' not found.")
+
+        return metadata_profile
 
     def get_root_folder_or_none(self):
         url = f'{self.lidarr_url}/api/v1/rootfolder'
@@ -91,13 +151,13 @@ class LidarrService:
         logging.warning(f"Album {album_title} by {artist.name} not found.")
         return None
 
-    def add_album(self, album, quality_profile_id, metadata_profile_id):
+    def add_album(self, album, quality_profile, metadata_profile):
         add_url = f'{self.lidarr_url}/api/v1/album'
         payload = {
             'foreignAlbumId': album.foreign_id,
             'monitored': album.is_monitored,
-            'qualityProfileId': quality_profile_id,
-            'metadataProfileId': metadata_profile_id,
+            'qualityProfileId': quality_profile._id,
+            'metadataProfileId': metadata_profile._id,
             'rootFolderPath': album.folder,
         }
 

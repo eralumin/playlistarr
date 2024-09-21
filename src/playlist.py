@@ -59,7 +59,7 @@ class PlaylistManager:
         self.navidrome.update_playlist(navidrome_playlist)
 
     def process_tracks_in_playlist(self, spotify_playlist: SpotifyPlaylist):
-        navidrome_playlist.tracks = []
+        navidrome_tracks = []
         for spotify_track in spotify_playlist.tracks:
             lidarr_artist = self.lidarr.get_artist_or_none(spotify_track.album.artist.name)
             if not lidarr_artist:
@@ -77,6 +77,6 @@ class PlaylistManager:
 
             spotify_track = self.navidrome.get_track_or_none(spotify_track.artist.name, spotify_track.title)
             if spotify_track:
-                navidrome_playlist.tracks.append(spotify_track)
+                navidrome_tracks.append(spotify_track)
 
-        return navidrome_playlist
+        return navidrome_tracks

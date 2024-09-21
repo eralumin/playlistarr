@@ -7,9 +7,11 @@ class MusicBrainzService:
     
     def get_album_id(self, album_title: str, artist_name: str) -> str | None:
         try:
-            result = musicbrainzngs.search_releases(artist=artist_name, release=album_title)
-            if result['release-list']:
-                return result['release-list'][0]['id']
+            result = musicbrainzngs.search_release_groups(artist=artist_name, release=album_title)
+
+            album_id = result.get('release-group-list', [{}])[0].get('id')
+            if album_id:
+                return album_id
             else:
                 logging.warning(f"No matching MusicBrainz ID found for album '{album_title}' by '{artist_name}'.")
                 return None

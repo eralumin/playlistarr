@@ -52,7 +52,7 @@ class SpotifyService:
         playlists = []
         for raw_playlist in raw_playlists:
             tracks = []
-            for raw_track in raw_playlist['tracks']['items']
+            for raw_track in raw_playlist['tracks']['items']:
                 artist = SpotifyArtist(
                     _id=raw_track['artists'][0]['id'],
                     name=raw_track['artists'][0]['name'],

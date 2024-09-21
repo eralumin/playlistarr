@@ -48,11 +48,18 @@ class SpotifyService:
 
         return response.json()['access_token']
 
-    def _load_playlist_list_from_raw(self, raw_playlists):
+    def _load_playlist_from_raw(self, raw_playlists):
         playlists = []
-        for raw_playlist in raw_playlists:
+        for raw_playlist in raw_playlists.get('items', []):
             tracks = []
-            for raw_track in raw_playlist['tracks']['items']:
+
+            tracks_url = raw_playlist['tracks']['href']
+            response = requests.get(tracks_url, headers={'Authorization': f'Bearer {self.token}'})
+            response.raise_for_status()
+            raw_tracks = response.json().get('items', [])
+
+            for raw_track_item in raw_tracks:
+                raw_track = raw_track_item['track']
                 artist = SpotifyArtist(
                     _id=raw_track['artists'][0]['id'],
                     name=raw_track['artists'][0]['name'],
@@ -66,13 +73,13 @@ class SpotifyService:
                     )
                 )
 
-            playlist = SpotifyPlaylist(
-                _id=raw_playlist['id'],
-                name=raw_playlist['name'],
-                tracks=tracks,
+            playlists.append(
+                SpotifyPlaylist(
+                    _id=raw_playlist['id'],
+                    name=raw_playlist['name'],
+                    tracks=tracks,
+                )
             )
-
-            playlists.append(playlist)
 
         return playlists
 
@@ -118,8 +125,8 @@ class SpotifyService:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
 
-        raw_playlists = response.json().get('playlists', {}).get('items', [])
-        return self._load_playlist_list_from_raw(raw_playlists)
+        raw_playlists = response.json().get('playlists', {})
+        return self._load_playlist_from_raw(raw_playlists)
 
     def get_playlists_for_category(self, category_id, limit):
         url = f'https://api.spotify.com/v1/browse/categories/{category_id}/playlists'
@@ -129,5 +136,5 @@ class SpotifyService:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
 
-        raw_playlists = response.json().get('playlists', {}).get('items', [])
-        return self._load_playlist_list_from_raw(raw_playlists)
+        raw_playlists = response.json().get('playlists', {})
+        return self._load_playlist_from_raw(raw_playlists)

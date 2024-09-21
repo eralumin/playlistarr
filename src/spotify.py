@@ -1,7 +1,11 @@
-import requests
 import base64
 import logging
+
+import musicbrainzngs
+import requests
+
 from dataclasses import dataclass
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

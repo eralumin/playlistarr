@@ -4,6 +4,7 @@ from datetime import datetime
 from croniter import croniter
 
 from lidarr import LidarrService
+from musicbrainz import MusicbrainzService
 from navidrome import NavidromeService
 from spotify import SpotifyService
 from playlist import PlaylistManager
@@ -45,12 +46,14 @@ def run_playlist_manager():
     spotify = SpotifyService(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
     lidarr = LidarrService(lidarr_url=LIDARR_URL, api_key=LIDARR_API_KEY)
     navidrome = NavidromeService(navidrome_url=NAVIDROME_URL, username=NAVIDROME_USERNAME, password=NAVIDROME_PASSWORD)
-    
+    musicbrainz = MusicBrainzService()
+
     # Initialize playlist manager
     playlist_manager = PlaylistManager(
         spotify=spotify,
         lidarr=lidarr,
         navidrome=navidrome,
+        musicbrainz=musicbrainz,
         artist_playlist_limit=SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST,
         category_playlist_limit=SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY,
         included_categories=INCLUDED_CATEGORIES,
@@ -66,8 +69,8 @@ def run_playlist_manager():
 
 def schedule_task():
     cron = croniter(CRON_SCHEDULE, datetime.now())
-    
-    run_playlist_manager()  # Run immediately
+
+    run_playlist_manager()
     next_run = cron.get_next(datetime)
 
     while True:

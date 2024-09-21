@@ -6,6 +6,7 @@ from croniter import croniter
 from lidarr import LidarrService
 from navidrome import NavidromeService
 from spotify import SpotifyService
+from playlist import PlaylistManager
 
 # Constants for Spotify and other services
 SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', 'default-client-id')

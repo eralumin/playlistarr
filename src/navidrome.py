@@ -1,3 +1,5 @@
+import requests
+
 class NavidromeService:
     def __init__(self, navidrome_url, username, password):
         self.navidrome_url = navidrome_url

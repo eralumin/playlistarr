@@ -1,3 +1,5 @@
+import requests
+
 class SpotifyService:
     def __init__(self, client_id, client_secret):
         self.client_id = client_id

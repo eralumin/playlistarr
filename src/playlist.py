@@ -12,8 +12,8 @@ class PlaylistManager:
         self.excluded_categories = [cat.lower() for cat in excluded_categories if cat]
         self.random_category_limit = random_category_limit
 
-        self.quality_profile_name = quality_profile_name
-        self.metadata_profile_name = metadata_profile_name
+        self.quality_profile_id = self.lidarr.get_profile_id_by_name(self.lidarr.quality_profiles, quality_profile_name)
+        self.metadata_profile_id = self.lidarr.get_profile_id_by_name(self.lidarr.metadata_profiles, metadata_profile_name)
 
     def process(self):
         self.process_playlists_by_artists()
@@ -74,10 +74,10 @@ class PlaylistManager:
                 self.lidarr.monitor_album(lidarr_album)
             else:
                 lidarr_album = self.lidarr.find_album_id_by_track(spotify_track.title, spotify_track.album.artist.name)
-                self.lidarr.add_album(lidarr_album, quality_profile_id, metadata_profile_id)
+                self.lidarr.add_album(lidarr_album, self.quality_profile_id, self.metadata_profile_id)
 
-            spotify_track = self.navidrome.get_track_or_none(spotify_track.artist.name, spotify_track.title)
-            if spotify_track:
-                navidrome_tracks.append(spotify_track)
+            navidrome_track = self.navidrome.get_track_or_none(spotify_track.artist.name, spotify_track.title)
+            if navidrome_track:
+                navidrome_tracks.append(navidrome_track)
 
         return navidrome_tracks

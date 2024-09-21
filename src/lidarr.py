@@ -7,7 +7,6 @@ class LidarrService:
         self.headers = {'X-Api-Key': self.api_key}
 
     def get_profile_id_by_name(self, profiles, name):
-        """Helper function to match a profile by name and return its ID."""
         for profile in profiles:
             if profile['name'].lower() == name.lower():
                 return profile['id']
@@ -15,19 +14,17 @@ class LidarrService:
 
     @property
     def quality_profiles(self):
-        """Fetch available quality profiles from Lidarr."""
         url = f'{self.lidarr_url}/api/v1/qualityprofile'
         response = requests.get(url, headers=self.headers)
         return response.json()
 
     @property
     def metadata_profiles(self):
-        """Fetch available metadata profiles from Lidarr."""
         url = f'{self.lidarr_url}/api/v1/metadataprofile'
         response = requests.get(url, headers=self.headers)
         return response.json()
 
-    def get_artist(self, artist_name):
+    def get_artist_or_none(self, artist_name):
         url = f'{self.lidarr_url}/api/v1/artist/lookup?term={artist_name}'
         headers = {'X-Api-Key': self.api_key}
         response = requests.get(url, headers=headers)
@@ -35,14 +32,15 @@ class LidarrService:
             artist_data = response.json()
             if artist_data:
                 return artist_data[0]
+
         return None
 
     def is_artist_monitored(self, artist_name):
-        artist_data = self.search_artist_in_lidarr(artist_name)
+        artist_data = self.get_artist_or_none(artist_name)
 
         return artist_data and artist_data['monitored']
 
-    def get_album(self, album_title, artist_name):
+    def get_album_or_none(self, album_title, artist_name):
         """Fetch the album details from Lidarr."""
         url = f'{self.lidarr_url}/api/v1/album/lookup?term={album_title} {artist_name}'
         response = requests.get(url, headers=self.headers)
@@ -89,7 +87,7 @@ class LidarrService:
             print(f'Metadata profile "{metadata_profile_name}" not found!')
             return
 
-        album_data = self.get_album(album_title, artist_name)
+        album_data = self.get_album_or_none(album_title, artist_name)
         if album_data and len(album_data) > 0:
             if not album_data[0]['monitored']:
                 self.monitor_album(album_data)

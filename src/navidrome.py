@@ -57,9 +57,11 @@ class NavidromeService:
         response = requests.get(url, params=self.params)
         artists = []
         if response.status_code == 200:
-            raw_artists = response.json().get('subsonic-response', {}).get('artists', {}).get('index', [])
-            for raw_artist in raw_artists:
-                artists.append(NavidromeArtist(_id=raw_artist['id'], name=raw_artist['name']))
+            raw_indexes = response.json().get('subsonic-response', {}).get('artists', {}).get('index', [])
+            for raw_index in raw_indexes:
+
+                for raw_artist in raw_index["artist"]:
+                    artists.append(NavidromeArtist(_id=raw_artist['id'], name=raw_artist['name']))
         else:
             print(f'Failed to fetch artists from Navidrome: {response.content}')
 

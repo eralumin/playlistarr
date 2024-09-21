@@ -2,7 +2,7 @@ import hashlib
 import random
 import string
 import requests
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class NavidromeArtist:
@@ -24,7 +24,7 @@ class NavidromeTrack:
 class NavidromePlaylist:
     _id: str
     name: str
-    tracks: list[NavidromeTrack]
+    tracks: list[NavidromeTrack] = field(default_factory=list)
 
 class NavidromeService:
     def __init__(self, navidrome_url, username, password):

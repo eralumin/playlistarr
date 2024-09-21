@@ -166,6 +166,7 @@ class LidarrService:
             logging.info(f'Album {album.title} by {album.artist.name} added successfully.')
         else:
             logging.error(f'Failed to add album: {response.content}')
+            logging.error(f'Album payload: {payload}')
 
     def monitor_album(self, album):
         logging.info(f'Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now...')

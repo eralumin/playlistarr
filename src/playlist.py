@@ -26,13 +26,13 @@ class PlaylistManager:
         if not self.quality_profile:
             logging.error(f"Quality profile '{quality_profile_name}' not found. Exiting.")
             sys.exit(1)
-        
+
         logging.info(f"Quality profile '{quality_profile_name}' found with ID: {self.quality_profile._id}")
 
         # Fetch metadata profile
         logging.info(f"Looking for metadata profile: '{metadata_profile_name}'")
         self.metadata_profile = self.lidarr.get_metadata_profile_or_none(metadata_profile_name)
-        
+
         if not self.metadata_profile:
             logging.error(f"Metadata profile '{metadata_profile_name}' not found. Exiting.")
             sys.exit(1)

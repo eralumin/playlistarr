@@ -93,7 +93,7 @@ class PlaylistManager:
 
             self.lidarr.add_album(lidarr_album, self.quality_profile_id, self.metadata_profile_id)
 
-            navidrome_track = self.navidrome.get_track_or_none(spotify_track.artist.name, spotify_track.title)
+            navidrome_track = self.navidrome.get_track_or_none(spotify_track.album.artist.name, spotify_track.title)
             if navidrome_track:
                 navidrome_tracks.append(navidrome_track)
 

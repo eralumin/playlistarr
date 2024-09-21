@@ -27,8 +27,7 @@ class NavidromeService:
             print(f'Failed to fetch artists from Navidrome: {response.content}')
             return []
 
-    def search_playlist(self, playlist_name):
-        """Search for a playlist in Navidrome by name."""
+    def get_playlist_id_or_none(self, playlist_name):
         url = f"{self.navidrome_url}/rest/getPlaylists"
 
         response = requests.get(url, params=self.params)
@@ -40,8 +39,7 @@ class NavidromeService:
         return None
 
     def create_or_update_playlist(self, playlist_name):
-        """Create a new playlist or update an existing one if it already exists."""
-        playlist_id = self.search_playlist(playlist_name)
+        playlist_id = self.get_playlist_id_or_none(playlist_name)
         if playlist_id:
             print(f'Playlist "{playlist_name}" already exists with ID {playlist_id}. Updating it.')
             return playlist_id
@@ -81,7 +79,7 @@ class NavidromeService:
         else:
             print(f'Failed to add tracks to playlist {playlist_id}: {response.content}')
 
-    def search_track_in_navidrome(self, artist_name, track_name):
+    def get_track_id_or_none(self, artist_name, track_name):
         """Search for a track in Navidrome using the Subsonic API."""
         url = f"{self.navidrome_url}/rest/search3"
         params = {

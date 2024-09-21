@@ -70,7 +70,7 @@ class PlaylistManager:
 
             self.lidarr.add_or_monitor_album(album_title, artist_name, quality_profile_name, metadata_profile_name)
 
-            track_id = self.navidrome.search_track_in_navidrome(artist_name, track_name)
+            track_id = self.navidrome.get_track_id_or_none(artist_name, track_name)
             if track_id:
                 playlist_tracks.append(track_id)
 

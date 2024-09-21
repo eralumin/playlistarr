@@ -64,14 +64,18 @@ class SpotifyService:
             'type': 'playlist',
             'limit': limit
         }
+
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
+
         return response.json().get('playlists', {}).get('items', [])
 
     def get_playlists_for_category(self, category_id, limit):
         url = f'https://api.spotify.com/v1/browse/categories/{category_id}/playlists'
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'limit': limit}
+
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
+
         return response.json().get('playlists', {}).get('items', [])

@@ -24,10 +24,20 @@ class LidarrService:
         response = requests.get(url, headers=self.headers)
         return response.json()
 
+    def get_root_folder_or_none(self):
+        url = f'{self.lidarr_url}/api/v1/rootfolder'
+        response = requests.get(url, headers=self.headers)
+        if response.status_code == 200:
+            root_folders = response.json()
+
+            if len(root_folders) > 0:
+                return root_folders[0]['path']
+
+        return None
+
     def get_artist_or_none(self, artist_name):
         url = f'{self.lidarr_url}/api/v1/artist/lookup?term={artist_name}'
-        headers = {'X-Api-Key': self.api_key}
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             artist_data = response.json()
             if artist_data:
@@ -51,14 +61,21 @@ class LidarrService:
     def add_album(self, album_data, quality_profile_id, metadata_profile_id):
         """Add a new album to Lidarr."""
         album_id = album_data[0]['foreignAlbumId']
+        artist_name = album_data[0]['artist']['artistName']
+
+        root_folder_path = self.get_root_folder_or_none()
+        if root_folder_path:
+            root_folder_path = f'{root_folder_path}/{artist_name}'
+
         add_url = f'{self.lidarr_url}/api/v1/album'
         payload = {
             'foreignAlbumId': album_id,
             'monitored': True,
             'qualityProfileId': quality_profile_id,
             'metadataProfileId': metadata_profile_id,
-            'rootFolderPath': '/path/to/music',  # Adjust as needed
+            'rootFolderPath': root_folder_path,
         }
+
         response = requests.post(add_url, json=payload, headers=self.headers)
         if response.status_code == 201:
             print(f'Album {album_data[0]["title"]} by {album_data[0]["artist"]["artistName"]} added successfully.')
@@ -66,10 +83,11 @@ class LidarrService:
             print(f'Failed to add album: {response.content}')
 
     def monitor_album(self, album_data):
-        """Monitor an existing album in Lidarr."""
         print(f'Album {album_data[0]["title"]} by {album_data[0]["artist"]["artistName"]} exists but is not monitored. Monitoring it now...')
+
         url = f'{self.lidarr_url}/api/v1/album'
         payload = {'monitored': True}
+
         response = requests.put(url, json=payload, headers=self.headers)
         if response.status_code == 202:
             print(f'Album {album_data[0]["title"]} is now being monitored.')

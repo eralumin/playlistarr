@@ -28,6 +28,10 @@ SPOTIFY_RANDOM_CATEGORY_LIMIT = int(get_env_variable('SPOTIFY_RANDOM_CATEGORY_LI
 INCLUDED_CATEGORIES = get_env_variable('INCLUDED_CATEGORIES', '').split(',')
 EXCLUDED_CATEGORIES = get_env_variable('EXCLUDED_CATEGORIES', '').split(',')
 
+# Lidarr
+QUALITY_PROFILE_NAME=get_env_variable('QUALITY_PROFILE_NAME', 'HQ')
+METADATA_PROFILE_NAME=get_env_variable('METADATA_PROFILE_NAME', 'Standard')
+
 # Cron-like schedule for running the task (example: "0 0 * * *" for midnight every day)
 CRON_SCHEDULE = get_env_variable('CRON_SCHEDULE', '0 0 * * *')
 
@@ -56,7 +60,6 @@ def run_playlist_manager():
     print("Playlist processing completed.")
 
 def schedule_task():
-    """Schedule the task using cron-like syntax."""
     cron = croniter(CRON_SCHEDULE, datetime.now())
     next_run = cron.get_next(datetime)
     
@@ -68,7 +71,6 @@ def schedule_task():
             run_playlist_manager()
             next_run = cron.get_next(datetime)  # Schedule the next run
         
-        # Sleep for a minute before checking again
         time.sleep(60)
 
 def main():

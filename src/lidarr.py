@@ -81,7 +81,7 @@ class LidarrService:
             return LidarrAlbum(
                 artist=artist,
                 title=album_title,
-                _id = raw_album['foreignAlbumId']
+                _id = raw_album['foreignAlbumId'],
                 is_monitored=raw_album['monitored'],
                 root_folder=self.get_root_folder_or_none(),
             )

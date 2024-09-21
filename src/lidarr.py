@@ -2,16 +2,10 @@ import requests
 import logging
 
 from dataclasses import dataclass
-from enum import Enum
 
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-class AlbumType(Enum):
-    ALBUM = "Album"
-    EP = "EP"
-    SINGLE = "Single"
 
 @dataclass
 class LidarrArtist:
@@ -21,10 +15,9 @@ class LidarrArtist:
 @dataclass
 class LidarrAlbum:
     artist: LidarrArtist
-    _id: str
+    foreign_id: str
     title: str
 
-    _type: AlbumType | None
     is_monitored: bool
     root_folder: str | None
 
@@ -32,10 +25,6 @@ class LidarrAlbum:
     def folder(self):
         if self.root_folder:
             return f'{self.root_folder}/{self.artist.name}'
-
-class LidarrTrack:
-    title: str
-    album: LidarrAlbum
 
 class LidarrService:
     def __init__(self, lidarr_url, api_key):
@@ -85,72 +74,6 @@ class LidarrService:
         logging.warning(f"Artist {artist_name} not found.")
         return None
 
-    def get_artist_discography(self, artist_name):
-        artist_albums_url = f'{self.lidarr_url}/api/v1/artist/lookup?term={artist_name}'
-        response = requests.get(artist_albums_url, headers=self.headers)
-
-        if response.status_code != 200:
-            logging.warning(f"Failed to fetch albums for artist {artist_name}.")
-            return []
-
-        artist_data = response.json()
-        if not artist_data:
-            logging.warning(f"No albums found for artist {artist_name}.")
-            return []
-
-        artist = self.get_artist_or_none(artist_name)
-        if not artist:
-            logging.warning(f"Artist {artist_name} not found.")
-            return []
-
-        discography = []
-        for raw_album in artist_data:
-            raw_album_type = raw_album.get('albumType', '').lower()
-
-            match raw_album_type:
-                case 'album':
-                    album_type = AlbumType.ALBUM
-                case 'ep':
-                    album_type = AlbumType.EP
-                case 'single':
-                    album_type = AlbumType.SINGLE
-                case _:
-                    logging.info(f"Skipping album {raw_album['title']} as it is of type {raw_album_type}.")
-                    continue
-
-            album = LidarrAlbum(
-                artist=artist,
-                _id=raw_album['id'],
-                title=raw_album['title'],
-                _type=album_type,
-                is_monitored=raw_album['monitored'],
-                root_folder=self.get_root_folder_or_none()
-            )
-            discography.append(album)
-
-        logging.info(f"Found {len(discography)} albums/EPs/singles for artist {artist_name}.")
-        return discography
-
-    def get_album_tracks(self, album):
-        album_tracks_url = f'{self.lidarr_url}/api/v1/album/{album._id}'
-        track_response = requests.get(album_tracks_url, headers=self.headers)
-
-        album_tracks = []
-        if track_response.status_code == 200:
-            raw_album_tracks = track_response.json().get('tracks', [])
-
-            for raw_track in raw_album_tracks:
-                album_tracks.append(
-                    LidarrTrack(
-                        title=raw_track['title'],
-                        album=album,
-                    )
-                )
-        else:
-            logging.warning(f"Failed to fetch tracks for album {album.title}.")
-
-        return album_tracks
-
     def get_album_or_none(self, album_title, artist):
         url = f'{self.lidarr_url}/api/v1/album/lookup?term={album_title} {artist.name}'
         response = requests.get(url, headers=self.headers)
@@ -160,7 +83,7 @@ class LidarrService:
             return LidarrAlbum(
                 artist=artist,
                 title=album_title,
-                _id=raw_album['foreignAlbumId'],
+                foreign_id=raw_album['foreignAlbumId'],
                 is_monitored=raw_album['monitored'],
                 root_folder=self.get_root_folder_or_none(),
             )
@@ -168,28 +91,10 @@ class LidarrService:
         logging.warning(f"Album {album_title} by {artist.name} not found.")
         return None
 
-    def find_album_id_by_track(self, track_title, artist_name):
-        discography = self.get_artist_discography(artist_name)
-        if not discography:
-            logging.warning(f"No discography found for artist {artist_name}.")
-            return None
-
-        for album in discography:
-            logging.info(f"Checking album: {album.title} ({album._type.value})")
-
-            album_tracks = self.get_album_tracks(album)
-            for track in album_tracks:
-                if track_title.lower() in track['title'].lower():
-                    logging.info(f"Track '{track_title}' found in album '{album.title}'.")
-                    return album._id
-
-        logging.warning(f"Track '{track_title}' by '{artist_name}' not found in any album, EP, or single.")
-        return None
-
     def add_album(self, album, quality_profile_id, metadata_profile_id):
         add_url = f'{self.lidarr_url}/api/v1/album'
         payload = {
-            'foreignAlbumId': album._id,
+            'foreignAlbumId': album.foreign_id,
             'monitored': album.is_monitored,
             'qualityProfileId': quality_profile_id,
             'metadataProfileId': metadata_profile_id,

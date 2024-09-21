@@ -1,4 +1,6 @@
 import logging
+
+from lidarr import LidarrAlbum
 from navidrome import NavidromePlaylist, NavidromeTrack
 from spotify import SpotifyPlaylist
 
@@ -77,11 +79,17 @@ class PlaylistManager:
             if lidarr_album:
                 self.lidarr.monitor_album(lidarr_album)
             else:
-                lidarr_album = self.lidarr.find_album_id_by_track(spotify_track.title, spotify_track.album.artist.name)
-
-            if not lidarr_album:
-                logging.info(f"Album not found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}'.")
-                continue
+                lidarr_artist = LidarrArtist(
+                    name=spotify_track.album.artist.name,
+                    is_monitored=False,
+                )
+                lidarr_album = LidarrAlbum(
+                    artist=lidarr_artist,
+                    foreign_id=str,
+                    title: spotify_track.album.title,
+                    is_monitored=True,
+                    root_folder=self.lidarr.get_root_folder_or_none(),
+                )
 
             self.lidarr.add_album(lidarr_album, self.quality_profile_id, self.metadata_profile_id)
 

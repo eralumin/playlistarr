@@ -65,11 +65,17 @@ class SpotifyService:
                     name=raw_track['artists'][0]['name'],
                 )
 
+                album = SpotifyAlbum(
+                    _id=raw_track['album']['id'],
+                    title=raw_track['album']['name'],
+                    artist=artist,
+                )
+
                 tracks.append(
                     SpotifyTrack(
                         _id=raw_track['id'],
                         title=raw_track['name'],
-                        artist=artist,
+                        album=album,
                     )
                 )
 

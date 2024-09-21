@@ -1,6 +1,6 @@
 import logging
 
-from lidarr import LidarrAlbum
+from lidarr import LidarrAlbum, LidarrArtist
 from navidrome import NavidromePlaylist, NavidromeTrack
 from spotify import SpotifyPlaylist
 

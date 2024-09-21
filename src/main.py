@@ -1,4 +1,3 @@
-import os
 import time
 from datetime import datetime
 from croniter import croniter
@@ -7,27 +6,30 @@ from lidarr import LidarrService
 from navidrome import NavidromeService
 from spotify import SpotifyService
 from playlist import PlaylistManager
+from utils import get_env_variable
+
 
 # Constants for Spotify and other services
-SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', 'default-client-id')
-SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET', 'default-client-secret')
-LIDARR_URL = os.getenv('LIDARR_URL', 'http://localhost:8686')
-LIDARR_API_KEY = os.getenv('LIDARR_API_KEY', 'default-lidarr-api-key')
-NAVIDROME_URL = os.getenv('NAVIDROME_URL', 'http://localhost:4533')
-NAVIDROME_USERNAME = os.getenv('NAVIDROME_USERNAME', 'default-username')
-NAVIDROME_PASSWORD = os.getenv('NAVIDROME_PASSWORD', 'default-password')
+SPOTIFY_CLIENT_ID = get_env_variable('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = get_env_variable('SPOTIFY_CLIENT_SECRET')
+LIDARR_URL = get_env_variable('LIDARR_URL', 'http://localhost:8686')
+LIDARR_API_KEY = get_env_variable('LIDARR_API_KEY')
+NAVIDROME_URL = get_env_variable('NAVIDROME_URL', 'http://localhost:4533')
+NAVIDROME_USERNAME = get_env_variable('NAVIDROME_USERNAME')
+NAVIDROME_PASSWORD = get_env_variable('NAVIDROME_PASSWORD')
+
 
 # Playlist limits
-SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST = int(os.getenv('SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST', 3))  # Number of playlists per artist
-SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY = int(os.getenv('SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY', 3))  # Number of playlists per category
-SPOTIFY_RANDOM_CATEGORY_LIMIT = int(os.getenv('SPOTIFY_RANDOM_CATEGORY_LIMIT', 50))  # Number of random categories to process
+SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST = int(get_env_variable('SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST', 3))  # Number of playlists per artist
+SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY = int(get_env_variable('SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY', 3))  # Number of playlists per category
+SPOTIFY_RANDOM_CATEGORY_LIMIT = int(get_env_variable('SPOTIFY_RANDOM_CATEGORY_LIMIT', 50))  # Number of random categories to process
 
 # Included and excluded categories
-INCLUDED_CATEGORIES = os.getenv('INCLUDED_CATEGORIES', '').split(',')
-EXCLUDED_CATEGORIES = os.getenv('EXCLUDED_CATEGORIES', '').split(',')
+INCLUDED_CATEGORIES = get_env_variable('INCLUDED_CATEGORIES', '').split(',')
+EXCLUDED_CATEGORIES = get_env_variable('EXCLUDED_CATEGORIES', '').split(',')
 
 # Cron-like schedule for running the task (example: "0 0 * * *" for midnight every day)
-CRON_SCHEDULE = os.getenv('CRON_SCHEDULE', '0 0 * * *')
+CRON_SCHEDULE = get_env_variable('CRON_SCHEDULE', '0 0 * * *')
 
 def run_playlist_manager():
     """Run the main playlist processing logic."""

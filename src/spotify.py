@@ -1,6 +1,10 @@
 import requests
 import base64
+import logging
 from dataclasses import dataclass
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 @dataclass
 class SpotifyArtist:
@@ -33,6 +37,7 @@ class SpotifyService:
 
     def _get_access_token(self):
         """Authenticate with Spotify API and get access token."""
+        logging.info('Authenticating with Spotify API...')
         auth_url = 'https://accounts.spotify.com/api/token'
 
         auth_string = f"{self.client_id}:{self.client_secret}"
@@ -46,6 +51,7 @@ class SpotifyService:
         response = requests.post(auth_url, headers=auth_header, data=auth_data)
         response.raise_for_status()
 
+        logging.info('Successfully authenticated with Spotify API.')
         return response.json()['access_token']
 
     def _load_playlist_from_raw(self, raw_playlists):
@@ -54,6 +60,7 @@ class SpotifyService:
             tracks = []
 
             tracks_url = raw_playlist['tracks']['href']
+            logging.info(f'Fetching tracks for playlist: {raw_playlist["name"]}')
             response = requests.get(tracks_url, headers={'Authorization': f'Bearer {self.token}'})
             response.raise_for_status()
             raw_tracks = response.json().get('items', [])
@@ -87,6 +94,8 @@ class SpotifyService:
                 )
             )
 
+            logging.info(f'Playlist {raw_playlist["name"]} loaded with {len(tracks)} tracks.')
+
         return playlists
 
     def get_categories(self, limit, excluded_categories):
@@ -94,6 +103,7 @@ class SpotifyService:
         fetched_categories = []
         processed_categories = set()
 
+        logging.info('Fetching Spotify categories...')
         while len(fetched_categories) < limit:
             url = 'https://api.spotify.com/v1/browse/categories'
             params = {'limit': limit, 'offset': len(processed_categories)}
@@ -111,15 +121,19 @@ class SpotifyService:
                 fetched_categories.append(category)
                 processed_categories.add(category_name)
 
+                logging.info(f'Fetched category: {category_name}')
+
                 if len(fetched_categories) >= limit:
                     break
 
             if len(categories) == 0:
                 break
 
+        logging.info(f'Total fetched categories: {len(fetched_categories)}')
         return fetched_categories
 
     def get_playlists_for_artist(self, artist_name, limit):
+        logging.info(f'Searching for playlists for artist: {artist_name}')
         url = f'https://api.spotify.com/v1/search'
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {
@@ -132,9 +146,11 @@ class SpotifyService:
         response.raise_for_status()
 
         raw_playlists = response.json().get('playlists', {})
+        logging.info(f'Fetched {len(raw_playlists.get("items", []))} playlists for artist {artist_name}.')
         return self._load_playlist_from_raw(raw_playlists)
 
     def get_playlists_for_category(self, category_id, limit):
+        logging.info(f'Fetching playlists for category: {category_id}')
         url = f'https://api.spotify.com/v1/browse/categories/{category_id}/playlists'
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'limit': limit}
@@ -143,4 +159,5 @@ class SpotifyService:
         response.raise_for_status()
 
         raw_playlists = response.json().get('playlists', {})
+        logging.info(f'Fetched {len(raw_playlists.get("items", []))} playlists for category {category_id}.')
         return self._load_playlist_from_raw(raw_playlists)

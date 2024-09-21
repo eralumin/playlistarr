@@ -2,6 +2,29 @@ import hashlib
 import random
 import string
 import requests
+from dataclasses import dataclass
+
+@dataclass
+class NavidromeArtist:
+    _id: str
+    name: str
+
+@dataclass
+class NavidromeAlbum:
+    _id: str
+    artist: NavidromeArtist
+
+@dataclass
+class NavidromeTrack:
+    _id: str
+    title: str
+    album: NavidromeAlbum
+
+@dataclass
+class NavidromePlaylist:
+    _id: str
+    name: str
+    tracks: list[NavidromeTrack]
 
 class NavidromeService:
     def __init__(self, navidrome_url, username, password):
@@ -19,7 +42,6 @@ class NavidromeService:
     @property
     def params(self):
         salt = self.generate_salt()
-
         return {
             'u': self.username,
             't': self.generate_token(salt),
@@ -33,71 +55,101 @@ class NavidromeService:
     def artists(self):
         url = f"{self.navidrome_url}/rest/getArtists"
         response = requests.get(url, params=self.params)
+        artists = []
         if response.status_code == 200:
-            return response.json().get('subsonic-response', {}).get('artists', {}).get('index', [])
+            raw_artists = response.json().get('subsonic-response', {}).get('artists', {}).get('index', [])
+            for raw_artist in raw_artists:
+                artists.append(NavidromeArtist(_id=raw_artist['id'], name=raw_artist['name']))
         else:
             print(f'Failed to fetch artists from Navidrome: {response.content}')
-            return []
 
-    def get_playlist_id_or_none(self, playlist_name):
+        return artists
+
+    def get_playlist_or_none(self, playlist_name) -> NavidromePlaylist | None:
+        """Get playlist by name or return None."""
         url = f"{self.navidrome_url}/rest/getPlaylists"
         response = requests.get(url, params=self.params)
         if response.status_code == 200:
             playlists = response.json().get('subsonic-response', {}).get('playlists', {}).get('playlist', [])
             for playlist in playlists:
                 if playlist['name'].lower() == playlist_name.lower():
-                    return playlist['id']
+                    return NavidromePlaylist(
+                        _id=playlist['id'],
+                        name=playlist['name'],
+                        tracks=[]
+                    )
         return None
 
-    def create_or_update_playlist(self, playlist_name):
-        playlist_id = self.get_playlist_id_or_none(playlist_name)
-        if playlist_id:
-            print(f'Playlist "{playlist_name}" already exists with ID {playlist_id}. Updating it.')
-            return playlist_id
-        else:
-            print(f'Creating new playlist: {playlist_name}')
-            return self.create_playlist(playlist_name)
-
-    def create_playlist(self, playlist_name):
+    def create_playlist(self, playlist_name) -> NavidromePlaylist | None:
         """Create a new playlist in Navidrome."""
         url = f"{self.navidrome_url}/rest/createPlaylist"
-        params = {
-            **self.params,
-            'name': playlist_name,
-        }
+        params = {**self.params, 'name': playlist_name}
         response = requests.get(url, params=params)
         if response.status_code == 200:
             playlist_id = response.json()['subsonic-response']['playlist']['id']
             print(f'Created playlist {playlist_name} with ID {playlist_id}')
-            return playlist_id
+
+            return NavidromePlaylist(
+                _id=playlist_id,
+                name=playlist_name,
+            )
         else:
             print(f'Failed to create playlist {playlist_name}: {response.content}')
             return None
 
-    def add_tracks_to_playlist(self, playlist_id, track_ids):
-        url = f"{self.navidrome_url}/rest/updatePlaylist"
-        params = {
-            **self.params,
-            'playlistId': playlist_id,
-            'songId': track_ids,  # Can be a list of track IDs
-        }
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            print(f'Successfully added {len(track_ids)} tracks to playlist with ID {playlist_id}.')
+    def get_or_create_playlist(self, playlist_name) -> str | None:
+        """Create or update a playlist and return its ID."""
+        playlist = self.get_playlist_or_none(playlist_name)
+        if playlist:
+            print(f'Playlist "{playlist_name}" already exists with ID {playlist._id}.')
+            return playlist
         else:
-            print(f'Failed to add tracks to playlist {playlist_id}: {response.content}')
+            print(f'Creating new playlist: {playlist_name}')
+            return self.create_playlist(playlist_name)
 
-    def get_track_id_or_none(self, artist_name, track_name):
-        """Search for a track in Navidrome using the Subsonic API."""
-        url = f"{self.navidrome_url}/rest/search3"
-        params = {
-            **self.params,
-            'query': f'{artist_name} {track_name}',
-        }
+    def update_playlist(self, playlist: NavidromePlaylist):
+        self.clear_playlist(playlist)
+        self.add_tracks_to_playlist(playlist)
+
+    def clear_playlist(self, playlist: NavidromePlaylist):
+        url = f"{self.navidrome_url}/rest/updatePlaylist"
+        params = {**self.params, 'playlistId': playlist.id, 'songId': []}
+
         response = requests.get(url, params=params)
         if response.status_code == 200:
+            print(f'Successfully cleared all tracks from playlist {playlist.name}.')
+        else:
+            print(f'Failed to clear playlist {playlist.name}: {response.content}')
+
+    def add_tracks_to_playlist(self, playlist: NavidromePlaylist):
+        if not playlist.tracks:
+            print(f'No tracks to add to playlist "{playlist.name}".')
+            return
+
+        url = f"{self.navidrome_url}/rest/updatePlaylist"
+        track_ids = [track._id for track in playlist.tracks]
+        params = {**self.params, 'playlistId': playlist._id, 'songId': track_ids}
+
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            print(f'Successfully added {len(track_ids)} tracks to playlist "{playlist.name}".')
+        else:
+            print(f'Failed to add tracks to playlist "{playlist.name}": {response.content}')
+
+    def get_track_or_none(self, artist_name: str, track_title: str) -> NavidromeTrack | None:
+        """Search for a track in Navidrome by artist and track name, return a NavidromeTrack dataclass."""
+        url = f"{self.navidrome_url}/rest/search3"
+        params = {**self.params, 'query': f'{artist_name} {track_title}'}
+
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+
             search_result = response.json().get('subsonic-response', {}).get('song', [])
             if search_result:
-                return search_result[0]['id']
+                track = search_result[0]
+                artist = NavidromeArtist(_id=track['artistId'], name=track['artist'])
+                album = NavidromeAlbum(_id=track['albumId'], artist=artist)
+
+                return NavidromeTrack(_id=track['id'], title=track['title'], album=album)
 
         return None

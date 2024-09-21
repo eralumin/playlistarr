@@ -1,5 +1,8 @@
+from navidrome import NavidromePlaylist, NavidromeTrack
+from spotify import SpotifyPlaylist
+
 class PlaylistManager:
-    def __init__(self, spotify, lidarr, navidrome, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories, random_category_limit):
+    def __init__(self, spotify, lidarr, navidrome, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories, random_category_limit, quality_profile_name, metadata_profile_name):
         self.spotify = spotify
         self.lidarr = lidarr
         self.navidrome = navidrome
@@ -9,65 +12,71 @@ class PlaylistManager:
         self.excluded_categories = [cat.lower() for cat in excluded_categories if cat]
         self.random_category_limit = random_category_limit
 
-    def process_playlists(self, quality_profile_name, metadata_profile_name):
-        self.process_playlists_by_artists(quality_profile_name, metadata_profile_name)
-        self.process_playlists_by_included_categories(quality_profile_name, metadata_profile_name)
-        self.process_playlists_by_random_categories(quality_profile_name, metadata_profile_name)
+        self.quality_profile_name = quality_profile_name
+        self.metadata_profile_name = metadata_profile_name
 
-    def process_playlists_by_artists(self, quality_profile_name, metadata_profile_name):
+    def process(self):
+        self.process_playlists_by_artists()
+        self.process_playlists_by_included_categories()
+        self.process_playlists_by_random_categories()
+
+    def process_playlists_by_artists(self):
         for artist in self.navidrome.artists:
-            artist_name = artist['name']
+            lidarr_artist = self.lidarr.get_artist_or_none(artist.name)
+            if lidarr_artist and lidarr_artist.is_monitored:
+                print(f'Fetching playlists for fully monitored artist: {artist.name}')
+                spotify_playlists = self.spotify.get_playlists_for_artist(artist.name, self.artist_playlist_limit)
 
-            if self.lidarr.is_artist_monitored(artist_name):
-                print(f'Fetching playlists for fully monitored artist: {artist_name}')
-                playlists = self.spotify.fetch_playlists_for_artist(artist_name, self.artist_playlist_limit)
-                for playlist in playlists:
-                    self.process_single_playlist(playlist, quality_profile_name, metadata_profile_name)
+                self.process_playlists(spotify_playlists)
             else:
-                print(f'Skipping artist {artist_name} because they are not fully monitored in Lidarr.')
+                print(f'Skipping artist {artist.name} because they are not fully monitored in Lidarr.')
 
-    def process_playlists_by_included_categories(self, quality_profile_name, metadata_profile_name):
-        for included_category in self.included_categories:
-            print(f'Fetching playlists for included category: {included_category}')
-            playlists = self.spotify.get_playlists_for_category(included_category, self.category_playlist_limit)
-            for playlist in playlists:
-                self.process_single_playlist(playlist, quality_profile_name, metadata_profile_name)
+    def process_playlists_by_included_categories(self):
+        for spotify_included_category in self.included_categories:
+            print(f'Fetching playlists for included category: {spotify_included_category}')
+            spotify_playlists = self.spotify.get_playlists_for_category(spotify_included_category, self.category_playlist_limit)
 
-    def process_playlists_by_random_categories(self, quality_profile_name, metadata_profile_name):
-        categories = self.spotify.get_categories(limit=self.random_category_limit, excluded_categories=self.excluded_categories)
-        for category in categories:
-            print(f'Fetching playlists for random category: {category["name"]}')
-            playlists = self.spotify.get_playlists_for_category(category['id'], self.category_playlist_limit)
-            for playlist in playlists:
-                self.process_single_playlist(playlist, quality_profile_name, metadata_profile_name)
+            self.process_playlists(spotify_playlists)
 
-    def process_single_playlist(self, playlist, quality_profile_name, metadata_profile_name):
-        """Process a single playlist, create or update in Navidrome."""
-        print(f'Processing playlist: {playlist["name"]}')
-        playlist_tracks = []
-        playlist_id = self.navidrome.create_or_update_playlist(playlist["name"])
+    def process_playlists_by_random_categories(self):
+        spotify_categories = self.spotify.get_categories(limit=self.random_category_limit, excluded_categories=self.excluded_categories)
+        for spotify_category in spotify_categories:
+            print(f'Fetching playlists for random category: {spotify_category["name"]}')
+            spotify_playlists = self.spotify.get_playlists_for_category(spotify_category['id'], self.category_playlist_limit)
 
-        if playlist_id:
-            playlist_tracks = self.process_tracks_in_playlist(playlist, quality_profile_name, metadata_profile_name)
+            self.process_playlists(spotify_playlists)
 
-            # Add tracks to Navidrome playlist if any tracks were found
-            if playlist_tracks:
-                self.navidrome.add_tracks_to_playlist(playlist_id, playlist_tracks)
+    def process_playlists(self, spotify_playlists: list[SpotifyPlaylist]):
+        for spotify_playlist in spotify_playlists:
+            self.process_playlist(spotify_playlist)
+
+    def process_playlist(self, spotify_playlist: SpotifyPlaylist):
+        print(f'Processing playlist: {spotify_playlist.name}')
+
+        navidrome_playlist = self.navidrome.get_or_create_playlist(spotify_playlist.name)
+        navidrome_playlist.tracks = self.process_tracks_in_playlist(spotify_playlist)
+
+        self.navidrome.update_playlist(navidrome_playlist)
+
+    def process_tracks_in_playlist(self, spotify_playlist: SpotifyPlaylist):
+        navidrome_playlist.tracks = []
+        for spotify_track in spotify_playlist.tracks:
+            lidarr_artist = self.lidarr.get_artist_or_none(spotify_track.album.artist.name)
+            if not lidarr_artist:
+                print(f'No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.')
+
+                lidarr_album = self.lidarr.get_album_or_none(spotify_track.album.title, spotify_track.album.artist.name)
+                if not lidarr_album:
+                    print(f'No matching album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.')
+
+            if lidarr_album:
+                self.lidarr.monitor_album(lidarr_album)
             else:
-                print(f'No matching tracks found for playlist {playlist["name"]} in Navidrome.')
+                lidarr_album = self.lidarr.find_album_id_by_track(spotify_track.title, spotify_track.album.artist.name)
+                self.lidarr.add_album(lidarr_album, quality_profile_id, metadata_profile_id)
 
-    def process_tracks_in_playlist(self, playlist, quality_profile_name, metadata_profile_name):
-        """Process the tracks within a playlist."""
-        playlist_tracks = []
-        for track in playlist['tracks']['items']:
-            track_name = track['track']['name']
-            artist_name = track['track']['artists'][0]['name']
-            album_title = track['track']['album']['name']
+            spotify_track = self.navidrome.get_track_or_none(spotify_track.artist.name, spotify_track.title)
+            if spotify_track:
+                navidrome_playlist.tracks.append(spotify_track)
 
-            self.lidarr.add_or_monitor_album(album_title, artist_name, quality_profile_name, metadata_profile_name)
-
-            track_id = self.navidrome.get_track_id_or_none(artist_name, track_name)
-            if track_id:
-                playlist_tracks.append(track_id)
-
-        return playlist_tracks
+        return navidrome_playlist

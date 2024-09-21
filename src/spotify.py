@@ -1,5 +1,29 @@
 import requests
 import base64
+from dataclasses import dataclass
+
+@dataclass
+class SpotifyArtist:
+    _id: str
+    name: str
+
+@dataclass
+class SpotifyAlbum:
+    _id: str
+    title: str
+    artist: SpotifyArtist
+
+@dataclass
+class SpotifyTrack:
+    _id: str
+    title: str
+    album: SpotifyAlbum
+
+@dataclass
+class SpotifyPlaylist:
+    _id: str
+    name: str
+    tracks: list[SpotifyTrack]
 
 class SpotifyService:
     def __init__(self, client_id, client_secret):
@@ -24,6 +48,34 @@ class SpotifyService:
 
         return response.json()['access_token']
 
+    def _load_playlist_list_from_raw(self, raw_playlists):
+        playlists = []
+        for raw_playlist in raw_playlists:
+            tracks = []
+            for raw_track in raw_playlist['tracks']['items']
+                artist = SpotifyArtist(
+                    _id=raw_track['artists'][0]['id'],
+                    name=raw_track['artists'][0]['name'],
+                )
+
+                tracks.append(
+                    SpotifyTrack(
+                        _id=raw_track['id'],
+                        title=raw_track['name'],
+                        artist=artist,
+                    )
+                )
+
+            playlist = SpotifyPlaylist(
+                _id=raw_playlist['id'],
+                name=raw_playlist['name'],
+                tracks=tracks,
+            )
+
+            playlists.append(playlist)
+
+        return playlists
+
     def get_categories(self, limit, excluded_categories):
         headers = {'Authorization': f'Bearer {self.token}'}
         fetched_categories = []
@@ -31,7 +83,7 @@ class SpotifyService:
 
         while len(fetched_categories) < limit:
             url = 'https://api.spotify.com/v1/browse/categories'
-            params = {'limit': 50, 'offset': len(processed_categories)}  # Fetching in batches of 50
+            params = {'limit': limit, 'offset': len(processed_categories)}
             response = requests.get(url, headers=headers, params=params)
             response.raise_for_status()
 
@@ -46,11 +98,9 @@ class SpotifyService:
                 fetched_categories.append(category)
                 processed_categories.add(category_name)
 
-                # Stop fetching when we reach the desired number of categories
                 if len(fetched_categories) >= limit:
                     break
 
-            # Break the loop if there are no more categories to process
             if len(categories) == 0:
                 break
 
@@ -68,7 +118,8 @@ class SpotifyService:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
 
-        return response.json().get('playlists', {}).get('items', [])
+        raw_playlists = response.json().get('playlists', {}).get('items', [])
+        return self._load_playlist_list_from_raw(raw_playlists)
 
     def get_playlists_for_category(self, category_id, limit):
         url = f'https://api.spotify.com/v1/browse/categories/{category_id}/playlists'
@@ -78,4 +129,5 @@ class SpotifyService:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
 
-        return response.json().get('playlists', {}).get('items', [])
+        raw_playlists = response.json().get('playlists', {}).get('items', [])
+        return self._load_playlist_list_from_raw(raw_playlists)

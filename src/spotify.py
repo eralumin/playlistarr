@@ -1,4 +1,5 @@
 import requests
+import base64
 
 class SpotifyService:
     def __init__(self, client_id, client_secret):
@@ -9,19 +10,21 @@ class SpotifyService:
     def _get_access_token(self):
         """Authenticate with Spotify API and get access token."""
         auth_url = 'https://accounts.spotify.com/api/token'
+
+        auth_string = f"{self.client_id}:{self.client_secret}"
+        auth_bytes = auth_string.encode('utf-8')
+        auth_base64 = base64.b64encode(auth_bytes).decode('utf-8')
         auth_header = {
-            'Authorization': 'Basic ' + (self.client_id + ':' + self.client_secret).encode('utf-8').decode('ascii')
+            'Authorization': f'Basic {auth_base64}'
         }
         auth_data = {'grant_type': 'client_credentials'}
+
         response = requests.post(auth_url, headers=auth_header, data=auth_data)
         response.raise_for_status()
+
         return response.json()['access_token']
 
     def get_categories(self, limit, excluded_categories):
-        """
-        Fetch categories from Spotify, ensuring that excluded categories are filtered out.
-        The method will keep fetching categories until it reaches the exact number of non-excluded categories.
-        """
         headers = {'Authorization': f'Bearer {self.token}'}
         fetched_categories = []
         processed_categories = set()
@@ -54,7 +57,6 @@ class SpotifyService:
         return fetched_categories
 
     def get_playlists_for_artist(self, artist_name, limit):
-        """Fetch playlists related to an artist from Spotify."""
         url = f'https://api.spotify.com/v1/search'
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {
@@ -67,7 +69,6 @@ class SpotifyService:
         return response.json().get('playlists', {}).get('items', [])
 
     def get_playlists_for_category(self, category_id, limit):
-        """Fetch playlists for a given category."""
         url = f'https://api.spotify.com/v1/browse/categories/{category_id}/playlists'
         headers = {'Authorization': f'Bearer {self.token}'}
         params = {'limit': limit}

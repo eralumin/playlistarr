@@ -62,6 +62,7 @@ class PlaylistManager:
         navidrome_tracks = []
         for spotify_track in spotify_playlist.tracks:
             lidarr_artist = self.lidarr.get_artist_or_none(spotify_track.album.artist.name)
+            lidarr_album = None
             if not lidarr_artist:
                 print(f"No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
 

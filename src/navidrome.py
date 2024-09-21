@@ -1,20 +1,31 @@
-import base64
+import hashlib
+import random
+import string
 import requests
 
 class NavidromeService:
     def __init__(self, navidrome_url, username, password):
         self.navidrome_url = navidrome_url
         self.username = username
-        self.encoded_password = base64.b64encode(password.encode('utf-8')).decode('utf-8')
+        self.password = password
+        self.salt = self.generate_salt()
+
+    def generate_salt(self, length=6):
+        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+
+    def generate_token(self):
+        token_string = self.password + self.salt
+        return hashlib.md5(token_string.encode('utf-8')).hexdigest()
 
     @property
     def params(self):
         return {
+            'u': self.username,
+            't': self.generate_token(),
+            's': self.salt,
             'v': '1.16.1',
             'c': 'playlistarr',
-            'f': 'json',
-            'u': self.username,
-            'p': f'enc:{self.encoded_password}',
+            'f': 'json'
         }
 
     @property
@@ -29,7 +40,6 @@ class NavidromeService:
 
     def get_playlist_id_or_none(self, playlist_name):
         url = f"{self.navidrome_url}/rest/getPlaylists"
-
         response = requests.get(url, params=self.params)
         if response.status_code == 200:
             playlists = response.json().get('subsonic-response', {}).get('playlists', {}).get('playlist', [])
@@ -54,7 +64,6 @@ class NavidromeService:
             **self.params,
             'name': playlist_name,
         }
-
         response = requests.get(url, params=params)
         if response.status_code == 200:
             playlist_id = response.json()['subsonic-response']['playlist']['id']
@@ -65,14 +74,12 @@ class NavidromeService:
             return None
 
     def add_tracks_to_playlist(self, playlist_id, track_ids):
-        """Add tracks to an existing playlist in Navidrome."""
         url = f"{self.navidrome_url}/rest/updatePlaylist"
         params = {
             **self.params,
             'playlistId': playlist_id,
             'songId': track_ids,  # Can be a list of track IDs
         }
-
         response = requests.get(url, params=params)
         if response.status_code == 200:
             print(f'Successfully added {len(track_ids)} tracks to playlist with ID {playlist_id}.')
@@ -86,7 +93,6 @@ class NavidromeService:
             **self.params,
             'query': f'{artist_name} {track_name}',
         }
-
         response = requests.get(url, params=params)
         if response.status_code == 200:
             search_result = response.json().get('subsonic-response', {}).get('song', [])

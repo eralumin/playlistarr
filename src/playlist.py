@@ -10,13 +10,11 @@ class PlaylistManager:
         self.random_category_limit = random_category_limit
 
     def process_playlists(self, quality_profile_name, metadata_profile_name):
-        """Process both artist and category playlists."""
         self.process_playlists_by_artists(quality_profile_name, metadata_profile_name)
         self.process_playlists_by_included_categories(quality_profile_name, metadata_profile_name)
         self.process_playlists_by_random_categories(quality_profile_name, metadata_profile_name)
 
     def process_playlists_by_artists(self, quality_profile_name, metadata_profile_name):
-        """Fetch and process playlists for fully monitored artists."""
         for artist in self.navidrome.artists:
             artist_name = artist['name']
 
@@ -29,7 +27,6 @@ class PlaylistManager:
                 print(f'Skipping artist {artist_name} because they are not fully monitored in Lidarr.')
 
     def process_playlists_by_included_categories(self, quality_profile_name, metadata_profile_name):
-        """Process playlists for the included categories."""
         for included_category in self.included_categories:
             print(f'Fetching playlists for included category: {included_category}')
             playlists = self.spotify.get_playlists_for_category(included_category, self.category_playlist_limit)
@@ -37,7 +34,6 @@ class PlaylistManager:
                 self.process_single_playlist(playlist, quality_profile_name, metadata_profile_name)
 
     def process_playlists_by_random_categories(self, quality_profile_name, metadata_profile_name):
-        """Fetch and process random categories."""
         categories = self.spotify.get_categories(limit=self.random_category_limit, excluded_categories=self.excluded_categories)
         for category in categories:
             print(f'Fetching playlists for random category: {category["name"]}')

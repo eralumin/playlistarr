@@ -63,11 +63,11 @@ class PlaylistManager:
         for spotify_track in spotify_playlist.tracks:
             lidarr_artist = self.lidarr.get_artist_or_none(spotify_track.album.artist.name)
             if not lidarr_artist:
-                print(f'No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.')
+                print(f"No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
 
                 lidarr_album = self.lidarr.get_album_or_none(spotify_track.album.title, spotify_track.album.artist.name)
                 if not lidarr_album:
-                    print(f'No matching album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.')
+                    print(f"No matching album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
 
             if lidarr_album:
                 self.lidarr.monitor_album(lidarr_album)

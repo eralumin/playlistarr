@@ -83,7 +83,12 @@ class NavidromeService:
     def create_playlist(self, playlist_name) -> NavidromePlaylist | None:
         """Create a new playlist in Navidrome."""
         url = f"{self.navidrome_url}/rest/createPlaylist"
-        params = {**self.params, 'name': playlist_name}
+        params = {
+            **self.params,
+            'name': playlist_name,
+            'public': 'true',
+        }
+
         response = requests.get(url, params=params)
         if response.status_code == 200:
             playlist_id = response.json()['subsonic-response']['playlist']['id']
@@ -113,7 +118,11 @@ class NavidromeService:
 
     def clear_playlist(self, playlist: NavidromePlaylist):
         url = f"{self.navidrome_url}/rest/updatePlaylist"
-        params = {**self.params, 'playlistId': playlist.id, 'songId': []}
+        params = {
+            **self.params,
+            'playlistId': playlist.id,
+            'songId': [],
+        }
 
         response = requests.get(url, params=params)
         if response.status_code == 200:

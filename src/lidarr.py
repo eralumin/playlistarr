@@ -63,7 +63,7 @@ class LidarrService:
         url = f'{self.lidarr_url}/api/v1/artist/lookup?term={artist_name}'
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
-            raw_artist[0] = response.json()
+            raw_artist = response.json()[0]
             if raw_artist:
                 return LidarrArtist(
                     name=raw_artist["name"],

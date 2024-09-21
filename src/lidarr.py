@@ -1,7 +1,9 @@
 import requests
-
+import logging
 from dataclasses import dataclass
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 @dataclass
 class LidarrArtist:
@@ -11,12 +13,9 @@ class LidarrArtist:
 @dataclass
 class LidarrAlbum:
     artist: LidarrArtist
-
     _id: str
     title: str
-
     is_monitored: bool
-
     root_folder: str | None
 
     @property
@@ -53,10 +52,10 @@ class LidarrService:
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             root_folders = response.json()
-
             if len(root_folders) > 0:
                 return root_folders[0]['path']
 
+        logging.warning("No root folder found or request failed.")
         return None
 
     def get_artist_or_none(self, artist_name):
@@ -69,7 +68,7 @@ class LidarrService:
                     name=raw_artist["artistName"],
                     is_monitored=raw_artist["monitored"],
                 )
-
+        logging.warning(f"Artist {artist_name} not found.")
         return None
 
     def get_album_or_none(self, album_title, artist):
@@ -81,11 +80,12 @@ class LidarrService:
             return LidarrAlbum(
                 artist=artist,
                 title=album_title,
-                _id = raw_album['foreignAlbumId'],
+                _id=raw_album['foreignAlbumId'],
                 is_monitored=raw_album['monitored'],
                 root_folder=self.get_root_folder_or_none(),
             )
 
+        logging.warning(f"Album {album_title} by {artist.name} not found.")
         return None
 
     def find_album_id_by_track(self, track_name, artist_name):
@@ -99,12 +99,13 @@ class LidarrService:
                 if album:
                     return album.get('foreignAlbumId')
 
+        logging.warning(f"Track {track_name} by {artist_name} not found.")
         return None
 
     def add_album(self, album, quality_profile_id, metadata_profile_id):
         add_url = f'{self.lidarr_url}/api/v1/album'
         payload = {
-            'foreignAlbumId': album.id,
+            'foreignAlbumId': album._id,
             'monitored': album.is_monitored,
             'qualityProfileId': quality_profile_id,
             'metadataProfileId': metadata_profile_id,
@@ -113,18 +114,18 @@ class LidarrService:
 
         response = requests.post(add_url, json=payload, headers=self.headers)
         if response.status_code == 201:
-            print(f'Album {album.title} by {album.artist.name} added successfully.')
+            logging.info(f'Album {album.title} by {album.artist.name} added successfully.')
         else:
-            print(f'Failed to add album: {response.content}')
+            logging.error(f'Failed to add album: {response.content}')
 
     def monitor_album(self, album):
-        print(f'Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now...')
+        logging.info(f'Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now...')
 
         url = f'{self.lidarr_url}/api/v1/album'
         payload = {'monitored': True}
 
         response = requests.put(url, json=payload, headers=self.headers)
         if response.status_code == 202:
-            print(f'Album {album.title} is now being monitored.')
+            logging.info(f'Album {album.title} is now being monitored.')
         else:
-            print(f'Failed to update monitoring: {response.content}')
+            logging.error(f'Failed to update monitoring: {response.content}')

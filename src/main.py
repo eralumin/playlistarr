@@ -1,4 +1,5 @@
 import time
+import logging
 from datetime import datetime
 from croniter import croniter
 
@@ -7,6 +8,9 @@ from navidrome import NavidromeService
 from spotify import SpotifyService
 from playlist import PlaylistManager
 from utils import get_env_variable
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Constants for Spotify and other services
 SPOTIFY_CLIENT_ID = get_env_variable('SPOTIFY_CLIENT_ID')
@@ -35,7 +39,7 @@ CRON_SCHEDULE = get_env_variable('CRON_SCHEDULE', '0 0 * * *')
 
 def run_playlist_manager():
     """Run the main playlist processing logic."""
-    print(f"Running task at {datetime.now()}")
+    logging.info(f"Running task at {datetime.now()}")
     
     # Initialize services
     spotify = SpotifyService(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
@@ -58,7 +62,7 @@ def run_playlist_manager():
 
     # Process playlists
     playlist_manager.process()
-    print("Playlist processing completed.")
+    logging.info("Playlist processing completed.")
 
 def schedule_task():
     cron = croniter(CRON_SCHEDULE, datetime.now())
@@ -74,7 +78,7 @@ def schedule_task():
         time.sleep(60)
 
 def main():
-    print(f"Scheduling task with cron: {CRON_SCHEDULE}")
+    logging.info(f"Scheduling task with cron: {CRON_SCHEDULE}")
     schedule_task()
 
 if __name__ == '__main__':

@@ -1,5 +1,9 @@
+import logging
 from navidrome import NavidromePlaylist, NavidromeTrack
 from spotify import SpotifyPlaylist
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class PlaylistManager:
     def __init__(self, spotify, lidarr, navidrome, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories, random_category_limit, quality_profile_name, metadata_profile_name):
@@ -24,16 +28,16 @@ class PlaylistManager:
         for artist in self.navidrome.artists:
             lidarr_artist = self.lidarr.get_artist_or_none(artist.name)
             if lidarr_artist and lidarr_artist.is_monitored:
-                print(f'Fetching playlists for fully monitored artist: {artist.name}')
+                logging.info(f'Fetching playlists for fully monitored artist: {artist.name}')
                 spotify_playlists = self.spotify.get_playlists_for_artist(artist.name, self.artist_playlist_limit)
 
                 self.process_playlists(spotify_playlists)
             else:
-                print(f'Skipping artist {artist.name} because they are not fully monitored in Lidarr.')
+                logging.info(f'Skipping artist {artist.name} because they are not fully monitored in Lidarr.')
 
     def process_playlists_by_included_categories(self):
         for spotify_included_category in self.included_categories:
-            print(f'Fetching playlists for included category: {spotify_included_category}')
+            logging.info(f'Fetching playlists for included category: {spotify_included_category}')
             spotify_playlists = self.spotify.get_playlists_for_category(spotify_included_category, self.category_playlist_limit)
 
             self.process_playlists(spotify_playlists)
@@ -41,7 +45,7 @@ class PlaylistManager:
     def process_playlists_by_random_categories(self):
         spotify_categories = self.spotify.get_categories(limit=self.random_category_limit, excluded_categories=self.excluded_categories)
         for spotify_category in spotify_categories:
-            print(f'Fetching playlists for random category: {spotify_category["name"]}')
+            logging.info(f'Fetching playlists for random category: {spotify_category["name"]}')
             spotify_playlists = self.spotify.get_playlists_for_category(spotify_category['id'], self.category_playlist_limit)
 
             self.process_playlists(spotify_playlists)
@@ -51,7 +55,7 @@ class PlaylistManager:
             self.process_playlist(spotify_playlist)
 
     def process_playlist(self, spotify_playlist: SpotifyPlaylist):
-        print(f'Processing playlist: {spotify_playlist.name}')
+        logging.info(f'Processing playlist: {spotify_playlist.name}')
 
         navidrome_playlist = self.navidrome.get_or_create_playlist(spotify_playlist.name)
         navidrome_playlist.tracks = self.process_tracks_in_playlist(spotify_playlist)
@@ -64,17 +68,22 @@ class PlaylistManager:
             lidarr_artist = self.lidarr.get_artist_or_none(spotify_track.album.artist.name)
             lidarr_album = None
             if not lidarr_artist:
-                print(f"No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
+                logging.info(f"No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
 
                 lidarr_album = self.lidarr.get_album_or_none(spotify_track.album.title, spotify_track.album.artist.name)
                 if not lidarr_album:
-                    print(f"No matching album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
+                    logging.info(f"No matching album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr.")
 
             if lidarr_album:
                 self.lidarr.monitor_album(lidarr_album)
             else:
                 lidarr_album = self.lidarr.find_album_id_by_track(spotify_track.title, spotify_track.album.artist.name)
-                self.lidarr.add_album(lidarr_album, self.quality_profile_id, self.metadata_profile_id)
+
+            if not lidarr_album:
+                logging.info(f"Album not found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}'.")
+                continue
+
+            self.lidarr.add_album(lidarr_album, self.quality_profile_id, self.metadata_profile_id)
 
             navidrome_track = self.navidrome.get_track_or_none(spotify_track.artist.name, spotify_track.title)
             if navidrome_track:

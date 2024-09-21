@@ -66,7 +66,7 @@ class LidarrService:
             raw_artist = response.json()[0]
             if raw_artist:
                 return LidarrArtist(
-                    name=raw_artist["name"],
+                    name=raw_artist["artistName"],
                     is_monitored=raw_artist["monitored"],
                 )
 

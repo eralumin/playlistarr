@@ -154,19 +154,28 @@ class LidarrService:
     def add_album(self, album, quality_profile, metadata_profile):
         add_url = f'{self.lidarr_url}/api/v1/album'
         payload = {
+            # 'foreignAlbumId': album.foreign_id,
+            # 'monitored': album.is_monitored,
+            # 'qualityProfileId': quality_profile._id,
+            # 'metadataProfileId': metadata_profile._id,
+            # 'rootFolderPath': album.folder,
+        # }
+
             'foreignAlbumId': album.foreign_id,
             'monitored': album.is_monitored,
-            'qualityProfileId': quality_profile._id,
-            'metadataProfileId': metadata_profile._id,
-            'rootFolderPath': album.folder,
-        }
+            'artist': {
+                'monitored': album.is_monitored,
+                'qualityProfileId': quality_profile._id,
+                'metadataProfileId': metadata_profile._id,
+                'rootFolderPath': album.folder,
+                }
+            }
 
         response = requests.post(add_url, json=payload, headers=self.headers)
         if response.status_code == 201:
             logging.info(f'Album {album.title} by {album.artist.name} added successfully.')
         else:
             logging.error(f'Failed to add album: {response.content}')
-            logging.error(f'Album payload: {payload}')
 
     def monitor_album(self, album):
         logging.info(f'Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now...')

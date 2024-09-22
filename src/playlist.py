@@ -152,40 +152,34 @@ class PlaylistManager:
             logging.debug(
                 f"Fetched Lidarr artist for track '{spotify_track.title}': {lidarr_artist}"
             )
+
             lidarr_album = None
             if not lidarr_artist:
-                logging.info(
+                logging.error(
                     f"No matching artist found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr."
                 )
+                continue
 
-                lidarr_album = self.lidarr.get_album_or_none(
-                    spotify_track.album.title, spotify_track.album.artist.name
-                )
-                logging.debug(
-                    f"Fetched Lidarr album for track '{spotify_track.title}': {lidarr_album}"
-                )
-                if not lidarr_album:
-                    logging.info(
-                        f"No matching album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr."
-                    )
+            lidarr_album = self.lidarr.get_album_or_none(
+                spotify_track.album.title, spotify_track.album.artist.name
+            )
 
-            if lidarr_album:
-                logging.debug(f"Monitoring Lidarr album: {lidarr_album.title}")
-                self.lidarr.monitor_album(lidarr_album)
-            else:
-                lidarr_artist = self.lidarr.get_artist_or_none(
-                    spotify_track.album.artist.name
+            if not lidarr_album:
+                logging.info(
+                    f"No matching local album found for track '{spotify_track.title}' by '{spotify_track.album.artist.name}' in Lidarr."
                 )
                 lidarr_album = LidarrAlbum(
                     artist=lidarr_artist,
                     title=spotify_track.album.title,
                     is_monitored=True,
                 )
+
+                self.lidarr.add_album(
+                    lidarr_album, self.quality_profile, self.metadata_profile
+                )
                 logging.debug(f"Created Lidarr album: {lidarr_album}")
 
-            self.lidarr.add_album(
-                lidarr_album, self.quality_profile, self.metadata_profile
-            )
+            self.lidarr.monitor_album(lidarr_album)
 
             navidrome_track = self.navidrome.get_track_or_none(
                 spotify_track.album.artist.name, spotify_track.title

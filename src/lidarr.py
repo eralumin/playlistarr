@@ -191,7 +191,6 @@ class LidarrService:
             return LidarrAlbum(
                 artist=artist,
                 title=album_title,
-                foreign_id=raw_album["foreignAlbumId"],
                 is_monitored=raw_album["monitored"],
             )
 

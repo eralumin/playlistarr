@@ -78,12 +78,16 @@ class NavidromeService:
                 .get("artists", {})
                 .get("index", [])
             )
+
             logging.debug(f"Raw artist data from Navidrome: {raw_indexes}")
             for raw_index in raw_indexes:
+                logging.debug(f"Iterate over Navidrome index {raw_index['name']}")
+
                 for raw_artist in raw_index["artist"]:
                     artists.append(
                         NavidromeArtist(_id=raw_artist["id"], name=raw_artist["name"])
                     )
+
             logging.info(f"Fetched {len(artists)} artists from Navidrome.")
         else:
             logging.error(f"Failed to fetch artists from Navidrome: {response.content}")

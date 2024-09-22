@@ -32,7 +32,6 @@ class LidarrAlbum:
     title: str
 
     is_monitored: bool
-    root_folder: str | None
 
     @property
     def foreign_id(self):
@@ -144,7 +143,7 @@ class LidarrService:
                 return LidarrArtist(
                     name=raw_artist["artistName"],
                     is_monitored=raw_artist["monitored"],
-                    root_folder=self.get_root_folder_or_none(),
+                    # root_folder=self.get_root_folder_or_none(),
                 )
         logging.warning(f"Artist {artist_name} not found.")
         return None

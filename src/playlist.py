@@ -99,7 +99,7 @@ class PlaylistManager:
                 lidarr_artist = LidarrArtist(
                     name=spotify_track.album.artist.name,
                     is_monitored=False,
-                    root_folder=self.lidarr.get_root_folder_or_none(),
+                    # root_folder=self.lidarr.get_root_folder_or_none(),
                 )
                 lidarr_album = LidarrAlbum(
                     artist=lidarr_artist,

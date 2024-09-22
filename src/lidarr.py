@@ -8,7 +8,6 @@ from musicbrainz import MusicBrainzService
 class LidarrArtist:
     name: str
     disambiguation: str
-    root_folder: str
     is_monitored: bool
 
     @property
@@ -19,17 +18,10 @@ class LidarrArtist:
         logging.debug(f"Foreign ID for artist '{self.name}': {foreign_id}")
         return foreign_id
 
-    @property
-    def folder(self):
-        if self.root_folder:
-            folder_path = f"{self.root_folder}/{self.name} {self.disambiguation}"
-            logging.debug(f"Artist folder path: {folder_path}")
-            return folder_path
-
     def __str__(self):
         return (
             f"LidarrArtist(name='{self.name}', disambiguation='{self.disambiguation}', "
-            f"root_folder='{self.root_folder}', is_monitored={self.is_monitored})"
+            f"is_monitored={self.is_monitored})"
         )
 
 
@@ -79,6 +71,7 @@ class LidarrService:
         self.lidarr_url = lidarr_url
         self.api_key = api_key
         self.headers = {"X-Api-Key": self.api_key}
+        self.root_folder = self.get_root_folder_or_none()
 
     @property
     def quality_profiles(self):
@@ -182,7 +175,6 @@ class LidarrService:
                     name=raw_artist["artistName"],
                     disambiguation=raw_artist["disambiguation"],
                     is_monitored=raw_artist["monitored"],
-                    root_folder=self.get_root_folder_or_none(),
                 )
         logging.warning(f"Artist '{artist_name}' not found.")
         return None
@@ -215,7 +207,7 @@ class LidarrService:
                 "foreignArtistId": album.artist.foreign_id,
                 "qualityProfileId": quality_profile._id,
                 "metadataProfileId": metadata_profile._id,
-                "rootFolderPath": album.artist.folder,
+                "rootFolderPath": self.root_folder,
             },
         }
 

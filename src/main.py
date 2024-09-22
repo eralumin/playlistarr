@@ -18,12 +18,12 @@ match log_level:
     case "DEBUG":
         logging.basicConfig(
             level=getattr(logging, log_level, logging.DEBUG),
-            format="%(asctime)s - %(levelname)s - %(message)s",
+            format="%(levelname)s - %(message)s",
         )
     case _:
         logging.basicConfig(
             level=getattr(logging, log_level, logging.INFO),
-            format="%(asctime)s - %(levelname)s - %(message)s",
+            format="%(levelname)s - %(message)s",
         )
 
 # Constants for Spotify and other services

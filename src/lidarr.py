@@ -26,6 +26,12 @@ class LidarrArtist:
             logging.debug(f"Artist folder path: {folder_path}")
             return folder_path
 
+    def __str__(self):
+        return (
+            f"LidarrArtist(name='{self.name}', disambiguation='{self.disambiguation}', "
+            f"root_folder='{self.root_folder}', is_monitored={self.is_monitored})"
+        )
+
 
 @dataclass
 class LidarrAlbum:
@@ -43,17 +49,29 @@ class LidarrAlbum:
         logging.debug(f"Foreign ID for album '{self.title}': {foreign_id}")
         return foreign_id
 
+    def __str__(self):
+        return (
+            f"LidarrAlbum(title='{self.title}', artist={self.artist}, "
+            f"is_monitored={self.is_monitored})"
+        )
+
 
 @dataclass
 class LidarrQualityProfile:
     _id: int
     name: str
 
+    def __str__(self):
+        return f"LidarrQualityProfile(id={self._id}, name='{self.name}')"
+
 
 @dataclass
 class LidarrMetadataProfile:
     _id: int
     name: str
+
+    def __str__(self):
+        return f"LidarrMetadataProfile(id={self._id}, name='{self.name}')"
 
 
 class LidarrService:

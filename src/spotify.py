@@ -9,12 +9,20 @@ class SpotifyArtist:
     _id: str
     name: str
 
+    def __str__(self):
+        return f"SpotifyArtist(id='{self._id}', name='{self.name}')"
+
 
 @dataclass
 class SpotifyAlbum:
     _id: str
     title: str
     artist: SpotifyArtist
+
+    def __str__(self):
+        return (
+            f"SpotifyAlbum(id='{self._id}', title='{self.title}', artist={self.artist})"
+        )
 
 
 @dataclass
@@ -23,12 +31,21 @@ class SpotifyTrack:
     title: str
     album: SpotifyAlbum
 
+    def __str__(self):
+        return (
+            f"SpotifyTrack(id='{self._id}', title='{self.title}', album={self.album})"
+        )
+
 
 @dataclass
 class SpotifyPlaylist:
     _id: str
     name: str
     tracks: list[SpotifyTrack]
+
+    def __str__(self):
+        track_count = len(self.tracks)
+        return f"SpotifyPlaylist(id='{self._id}', name='{self.name}', tracks_count={track_count})"
 
 
 class SpotifyService:

@@ -58,7 +58,7 @@ METADATA_PROFILE_NAME = get_env_variable("METADATA_PROFILE_NAME", "Standard")
 CRON_SCHEDULE = get_env_variable("CRON_SCHEDULE", "0 0 * * *")
 
 
-def run_playlist_manager():
+def get_playlist_manager():
     """Run the main playlist processing logic."""
     logging.info(f"Running task at {datetime.now()}")
 
@@ -103,10 +103,7 @@ def run_playlist_manager():
         metadata_profile_name=METADATA_PROFILE_NAME,
     )
 
-    # Process playlists
-    logging.debug("Starting playlist processing...")
-    playlist_manager.process()
-    logging.info("Playlist processing completed.")
+    return playlist_manager
 
 
 def schedule_task():
@@ -115,16 +112,24 @@ def schedule_task():
     logging.debug(f"Initial cron schedule: {CRON_SCHEDULE}")
     logging.debug(f"Next scheduled run time: {cron.get_next(datetime)}")
 
-    run_playlist_manager()
+    playlist_manager = get_playlist_manager()
+
+    logging.debug("Starting playlist processing...")
+    playlist_manager.process()
+    logging.info("Playlist processing completed.")
+
     next_run = cron.get_next(datetime)
+    logging.debug(f"Next run scheduled at: {next_run}")
 
     while True:
         current_time = datetime.now()
         logging.debug(f"Current time: {current_time}, Next run: {next_run}")
 
         if current_time >= next_run:
-            logging.debug("Time to run the playlist manager.")
-            run_playlist_manager()
+            logging.debug("Starting playlist processing...")
+            playlist_manager.process()
+            logging.info("Playlist processing completed.")
+
             next_run = cron.get_next(datetime)
             logging.debug(f"Next run scheduled at: {next_run}")
         time.sleep(60)

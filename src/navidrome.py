@@ -11,11 +11,17 @@ class NavidromeArtist:
     _id: str
     name: str
 
+    def __str__(self):
+        return f"NavidromeArtist(id='{self._id}', name='{self.name}')"
+
 
 @dataclass
 class NavidromeAlbum:
     _id: str
     artist: NavidromeArtist
+
+    def __str__(self):
+        return f"NavidromeAlbum(id='{self._id}', artist={self.artist})"
 
 
 @dataclass
@@ -24,12 +30,21 @@ class NavidromeTrack:
     title: str
     album: NavidromeAlbum
 
+    def __str__(self):
+        return (
+            f"NavidromeTrack(id='{self._id}', title='{self.title}', album={self.album})"
+        )
+
 
 @dataclass
 class NavidromePlaylist:
     _id: str
     name: str
     tracks: list[NavidromeTrack] = field(default_factory=list)
+
+    def __str__(self):
+        track_count = len(self.tracks)
+        return f"NavidromePlaylist(id='{self._id}', name='{self.name}', tracks_count={track_count})"
 
 
 class NavidromeService:

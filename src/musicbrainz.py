@@ -18,3 +18,18 @@ class MusicBrainzService:
         except Exception as e:
             logging.error(f"Error fetching MusicBrainz ID for album '{album_title}' by '{artist_name}': {e}")
             return None
+
+    def get_artist_id(self, artist_name: str) -> str | None:
+        try:
+            result = musicbrainzngs.search_artists(artist=artist_name)
+            
+            artist_id = result.get('artist-list', [{}])[0].get('id')
+            if artist_id:
+                return artist_id
+            else:
+                logging.warning(f"No matching MusicBrainz ID found for artist '{artist_name}'.")
+
+                return None
+        except Exception as e:
+            logging.error(f"Error fetching MusicBrainz ID for artist '{artist_name}': {e}")
+            return None

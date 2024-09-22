@@ -8,11 +8,10 @@ from spotify import SpotifyPlaylist
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class PlaylistManager:
-    def __init__(self, spotify, lidarr, navidrome, musicbrainz, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories, random_category_limit, quality_profile_name, metadata_profile_name):
+    def __init__(self, spotify, lidarr, navidrome, artist_playlist_limit, category_playlist_limit, included_categories, excluded_categories, random_category_limit, quality_profile_name, metadata_profile_name):
         self.spotify = spotify
         self.lidarr = lidarr
         self.navidrome = navidrome
-        self.musicbrainz = musicbrainz
         self.artist_playlist_limit = artist_playlist_limit
         self.category_playlist_limit = category_playlist_limit
         self.included_categories = [cat.lower() for cat in included_categories if cat]
@@ -103,7 +102,6 @@ class PlaylistManager:
                 )
                 lidarr_album = LidarrAlbum(
                     artist=lidarr_artist,
-                    foreign_id=self.musicbrainz.get_album_id(spotify_track.album.title, spotify_track.album.artist.name),
                     title=spotify_track.album.title,
                     is_monitored=True,
                     root_folder=self.lidarr.get_root_folder_or_none(),

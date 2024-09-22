@@ -46,14 +46,12 @@ def run_playlist_manager():
     spotify = SpotifyService(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
     lidarr = LidarrService(lidarr_url=LIDARR_URL, api_key=LIDARR_API_KEY)
     navidrome = NavidromeService(navidrome_url=NAVIDROME_URL, username=NAVIDROME_USERNAME, password=NAVIDROME_PASSWORD)
-    musicbrainz = MusicBrainzService()
 
     # Initialize playlist manager
     playlist_manager = PlaylistManager(
         spotify=spotify,
         lidarr=lidarr,
         navidrome=navidrome,
-        musicbrainz=musicbrainz,
         artist_playlist_limit=SPOTIFY_PLAYLIST_LIMIT_BY_ARTIST,
         category_playlist_limit=SPOTIFY_PLAYLIST_LIMIT_BY_CATEGORY,
         included_categories=INCLUDED_CATEGORIES,

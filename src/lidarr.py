@@ -3,23 +3,38 @@ import logging
 
 from dataclasses import dataclass
 
+from musicbrainz import MusicBrainzService
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 @dataclass
 class LidarrArtist:
     name: str
+    foreign_id: str
     is_monitored: bool
+
+    @property
+    def foreign_id(self):
+        mb = MusicBrainzService()
+
+        return mb.get_artist_id(self.name)
 
 @dataclass
 class LidarrAlbum:
     artist: LidarrArtist
-    foreign_id: str
     title: str
 
     is_monitored: bool
     root_folder: str | None
+
+    @property
+    def foreign_id(self):
+        mb = MusicBrainzService()
+
+        return mb.get_album_id(self.name, self.artist.name)
 
     @property
     def folder(self):
@@ -129,6 +144,7 @@ class LidarrService:
             if raw_artist:
                 return LidarrArtist(
                     name=raw_artist["artistName"],
+                    LidarrArtist
                     is_monitored=raw_artist["monitored"],
                 )
         logging.warning(f"Artist {artist_name} not found.")
@@ -157,6 +173,7 @@ class LidarrService:
             "foreignAlbumId": album.foreign_id,
             "monitored": album.is_monitored,
             "artist": {
+                "foreignArtistId": album.artist.foreign_id,
                 "qualityProfileId": quality_profile._id,
                 "metadataProfileId": metadata_profile._id,
                 "rootFolderPath": album.folder,

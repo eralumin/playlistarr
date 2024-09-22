@@ -13,6 +13,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 @dataclass
 class LidarrArtist:
     name: str
+    disambiguation: str
+    root_folder: str
+
     is_monitored: bool
 
     @property
@@ -24,7 +27,7 @@ class LidarrArtist:
     @property
     def folder(self):
         if self.root_folder:
-            return f'{self.root_folder}/{self.artist.name}'
+            return f'{self.root_folder}/{self.name} {self.disambiguation}'
 
 @dataclass
 class LidarrAlbum:
@@ -84,7 +87,7 @@ class LidarrService:
         try:
             logging.info("Fetching metadata profiles from Lidarr...")
             response = requests.get(url, headers=self.headers)
-            response.raise_for_status()  # Raises an error if the request failed
+            response.raise_for_status()
             raw_metadata_profiles = response.json()
 
             metadata_profiles = []
@@ -142,8 +145,9 @@ class LidarrService:
             if raw_artist:
                 return LidarrArtist(
                     name=raw_artist["artistName"],
+                    disambiguation=raw_artist["disambiguation"],
                     is_monitored=raw_artist["monitored"],
-                    # root_folder=self.get_root_folder_or_none(),
+                    root_folder=self.get_root_folder_or_none(),
                 )
         logging.warning(f"Artist {artist_name} not found.")
         return None
@@ -173,7 +177,7 @@ class LidarrService:
                 "foreignArtistId": album.artist.foreign_id,
                 "qualityProfileId": quality_profile._id,
                 "metadataProfileId": metadata_profile._id,
-                # "rootFolderPath": album.artist.folder,
+                "rootFolderPath": album.artist.folder,
             }
         }
 

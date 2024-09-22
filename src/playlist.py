@@ -96,10 +96,8 @@ class PlaylistManager:
             if lidarr_album:
                 self.lidarr.monitor_album(lidarr_album)
             else:
-                lidarr_artist = LidarrArtist(
-                    name=spotify_track.album.artist.name,
-                    is_monitored=False,
-                    # root_folder=self.lidarr.get_root_folder_or_none(),
+                lidarr_artist = self.lidarr.get_artist_or_none(
+                    spotify_track.album.artist.name
                 )
                 lidarr_album = LidarrAlbum(
                     artist=lidarr_artist,

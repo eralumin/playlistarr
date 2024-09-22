@@ -179,7 +179,11 @@ class PlaylistManager:
                 )
                 logging.debug(f"Created Lidarr album: {lidarr_album}")
 
-            self.lidarr.monitor_album(lidarr_album)
+            if not lidarr_album.is_monitored:
+                logging.info(
+                    f"Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now..."
+                )
+                self.lidarr.monitor_album(lidarr_album)
 
             navidrome_track = self.navidrome.get_track_or_none(
                 spotify_track.album.artist.name, spotify_track.title

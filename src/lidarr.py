@@ -220,16 +220,34 @@ class LidarrService:
             logging.error(f"Failed to add album: {response.content}")
 
     def monitor_album(self, album):
-        logging.info(
-            f"Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now..."
-        )
+        album_id = self.get_album_id(album)
 
-        url = f"{self.lidarr_url}/api/v1/album"
-        payload = {"monitored": True}
+        if album_id is None:
+            logging.error(f"Could not find album ID for '{album.title}'. Aborting monitor call.")
+            return
+
+        url = f"{self.lidarr_url}/api/v1/album/monitor"
+        payload = {
+            "albumIds": [album_id],
+            "monitored": True
+        }
 
         logging.debug(f"Monitoring album '{album.title}' with payload: {payload}")
+
         response = requests.put(url, json=payload, headers=self.headers)
-        if response.status_code == 202:
+        if response.status_code == 200:
             logging.info(f"Album {album.title} is now being monitored.")
         else:
-            logging.error(f"Failed to update monitoring: {response.content}")
+            logging.error(f"Failed to update monitoring for album {album.title}: {response.content}")
+
+    def get_album_id(self, album):
+        url = f"{self.lidarr_url}/api/v1/album/lookup?term={album.title}"
+
+        response = requests.get(url, headers=self.headers)
+        if response.status_code == 200:
+            raw_album = response.json()[0]
+            return raw_album.get('id')
+        else:
+            logging.error(f"Error fetching album ID for '{album.title}': {response.content}")
+
+            return None

@@ -99,12 +99,12 @@ class PlaylistManager:
                 lidarr_artist = LidarrArtist(
                     name=spotify_track.album.artist.name,
                     is_monitored=False,
+                    root_folder=self.lidarr.get_root_folder_or_none(),
                 )
                 lidarr_album = LidarrAlbum(
                     artist=lidarr_artist,
                     title=spotify_track.album.title,
                     is_monitored=True,
-                    root_folder=self.lidarr.get_root_folder_or_none(),
                 )
 
             self.lidarr.add_album(lidarr_album, self.quality_profile, self.metadata_profile)

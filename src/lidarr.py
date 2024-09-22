@@ -13,7 +13,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 @dataclass
 class LidarrArtist:
     name: str
-    foreign_id: str
     is_monitored: bool
 
     @property
@@ -21,6 +20,11 @@ class LidarrArtist:
         mb = MusicBrainzService()
 
         return mb.get_artist_id(self.name)
+
+    @property
+    def folder(self):
+        if self.root_folder:
+            return f'{self.root_folder}/{self.artist.name}'
 
 @dataclass
 class LidarrAlbum:
@@ -35,11 +39,6 @@ class LidarrAlbum:
         mb = MusicBrainzService()
 
         return mb.get_album_id(self.name, self.artist.name)
-
-    @property
-    def folder(self):
-        if self.root_folder:
-            return f'{self.root_folder}/{self.artist.name}'
 
 @dataclass
 class LidarrQualityProfile:
@@ -144,8 +143,8 @@ class LidarrService:
             if raw_artist:
                 return LidarrArtist(
                     name=raw_artist["artistName"],
-                    LidarrArtist
                     is_monitored=raw_artist["monitored"],
+                    root_folder=self.get_root_folder_or_none(),
                 )
         logging.warning(f"Artist {artist_name} not found.")
         return None
@@ -161,7 +160,6 @@ class LidarrService:
                 title=album_title,
                 foreign_id=raw_album['foreignAlbumId'],
                 is_monitored=raw_album['monitored'],
-                root_folder=self.get_root_folder_or_none(),
             )
 
         logging.warning(f"Album {album_title} by {artist.name} not found.")
@@ -176,7 +174,7 @@ class LidarrService:
                 "foreignArtistId": album.artist.foreign_id,
                 "qualityProfileId": quality_profile._id,
                 "metadataProfileId": metadata_profile._id,
-                "rootFolderPath": album.folder,
+                # "rootFolderPath": album.artist.folder,
             }
         }
 

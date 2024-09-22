@@ -12,7 +12,7 @@ from utils import get_env_variable
 
 import logging
 
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level = get_env_variable("LOG_LEVEL", "INFO").upper()
 
 match log_level:
     case "DEBUG":

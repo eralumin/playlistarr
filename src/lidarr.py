@@ -37,7 +37,7 @@ class LidarrAlbum:
     def foreign_id(self):
         mb = MusicBrainzService()
 
-        return mb.get_album_id(self.name, self.artist.name)
+        return mb.get_album_id(self.title, self.artist.name)
 
 @dataclass
 class LidarrQualityProfile:

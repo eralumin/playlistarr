@@ -161,7 +161,7 @@ class PlaylistManager:
                 continue
 
             lidarr_album = self.lidarr.get_album_or_none(
-                spotify_track.album.title, spotify_track.album.artist.name
+                spotify_track.album.title, lidarr_artist
             )
 
             if not lidarr_album:

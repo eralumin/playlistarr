@@ -154,22 +154,14 @@ class LidarrService:
     def add_album(self, album, quality_profile, metadata_profile):
         add_url = f'{self.lidarr_url}/api/v1/album'
         payload = {
-            # 'foreignAlbumId': album.foreign_id,
-            # 'monitored': album.is_monitored,
-            # 'qualityProfileId': quality_profile._id,
-            # 'metadataProfileId': metadata_profile._id,
-            # 'rootFolderPath': album.folder,
-        # }
-
-            'foreignAlbumId': album.foreign_id,
-            'monitored': album.is_monitored,
-            'artist': {
-                'monitored': album.is_monitored,
-                'qualityProfileId': quality_profile._id,
-                'metadataProfileId': metadata_profile._id,
-                'rootFolderPath': album.folder,
-                }
+            "foreignAlbumId": album.foreign_id,
+            "monitored": album.is_monitored,
+            "artist": {
+                "qualityProfileId": quality_profile._id,
+                "metadataProfileId": metadata_profile._id,
+                "rootFolderPath": album.folder,
             }
+        }
 
         response = requests.post(add_url, json=payload, headers=self.headers)
         if response.status_code == 201:

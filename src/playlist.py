@@ -181,7 +181,7 @@ class PlaylistManager:
 
             if not lidarr_album.is_monitored:
                 logging.info(
-                    f"Album {album.title} by {album.artist.name} exists but is not monitored. Monitoring it now..."
+                    f"Album {lidarr_album.title} by {lidarr_album.artist.name} exists but is not monitored. Monitoring it now..."
                 )
                 self.lidarr.monitor_album(lidarr_album)
 
